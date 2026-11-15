@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# App
+commander.db
+commander.db-wal
+commander.db-shm
+config/event.yaml
+.env
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Node (TypeScript port, see docs/adr/0003)
+node_modules/
+
+# Wrangler local state (local D1 for tests)
+.wrangler/
+
+# Wrangler dev vars (the passcode and the cookie signing key)
+.dev.vars*
+# ...but the template carries no secrets and is how anyone knows what to set.
+!.dev.vars.example
+
+# Session scaffolding, not part of the app. These were the briefs and handoff
+# notes the build ran on, and they carry homelab specifics (container ids,
+# private addresses, internal hostnames) that have no business in a public
+# repository. Kept on disk, out of the tree.
+/handoff/
+/ARCHITECT.md
+/BUILDER.md
+/REVIEWER.md
+/new-setup.md
+/.claude/

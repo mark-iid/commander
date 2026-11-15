@@ -1,0 +1,14 @@
+# Copy to .dev.vars for local development (`wrangler dev`). Gitignored.
+#
+# In production these are Worker secrets, not vars:
+#   wrangler secret put TRACKER_PASSCODE
+#   wrangler secret put SESSION_SECRET
+#
+# The app refuses to serve /entry and /admin while either is unset or still a
+# placeholder, and says so rather than serving them unauthenticated.
+
+# The shared passcode every tracker types.
+TRACKER_PASSCODE=change-me
+
+# Signing key for the session cookie. Generate: openssl rand -hex 32
+SESSION_SECRET=change-me

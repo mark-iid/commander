@@ -1,0 +1,36 @@
+{# Which deck each player at this table brought to this match.
+
+   Filled in once per match, not per turn, so it sits behind a summary like the
+   reseat form rather than above the turn entry. Every box carries its player's
+   name in a hidden field beside it: a deck belongs to the person, not to the
+   seat they happen to be in this match (match_commanders, schema.sql). #}
+<form class="card decks"
+      hx-post="{{ url_for('entry_commanders').path }}"
+      hx-target="#entry-panel"
+      hx-swap="outerHTML">
+  <input type="hidden" name="pod" value="{{ pod }}">
+  <input type="hidden" name="match_no" value="{{ match_no }}">
+
+  {% if errors.get('commanders') %}<p class="err">{{ errors['commanders'] }}</p>{% endif %}
+
+  <div class="grid">
+    {% for name in seating %}
+      <label class="field">
+        <span>{{ name }}</span>
+        <input type="hidden" name="player" value="{{ name }}">
+        <input type="text" name="commander" maxlength="{{ commander_max }}"
+               value="{{ commanders.get(name, '') }}" placeholder="—"
+               autocomplete="off" aria-label="Commander for {{ name }}">
+      </label>
+    {% endfor %}
+  </div>
+
+  <div class="actions">
+    <button type="submit">Save commanders</button>
+    {# The boxes open showing the player's roster deck, which is a suggestion
+       and not a record until this saves -- so say so, rather than let a tracker
+       read a pre-filled box as something already entered. #}
+    <span class="hint">Pre-filled with each player's usual deck. Empty a box to
+      record no commander for this match.</span>
+  </div>
+</form>

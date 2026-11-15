@@ -1,0 +1,139 @@
+/* The results sheet. Loaded only by /results, on top of app.css.
+ *
+ * This is the one page whose real output is paper (or a PDF printed from it),
+ * so the print rules below are the point and the screen rules are the preview.
+ * The app is dark because trackers use it at a dim table; a sheet printed dark
+ * would drain a cartridge and read worse, so print inverts to black on white.
+ */
+
+.results { max-width: 60rem; }
+
+.sheet-head h1 { margin-bottom: 0.25rem; }
+.sheet-meta { margin: 0 0 1.5rem; color: var(--muted); font-size: 0.9rem; }
+.sheet-meta strong { color: var(--bad); }
+
+.sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+/* An <a> that has to sit beside a <button> without looking like a link. */
+.button-link {
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.button-link:hover { border-color: var(--accent); }
+
+.sheet-section { margin-bottom: 2.5rem; }
+.sheet-section h2 {
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.75rem;
+  font-size: 1.15rem;
+}
+.round-detail h3 {
+  margin: 1.5rem 0 0.4rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sheet-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.sheet-table th, .sheet-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.sheet-table thead th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+.sheet-table .num { text-align: right; }
+.sheet-table .winner-row td { font-weight: 700; }
+/* The deck a player brought to that match, under their name. Never bold, even
+   on the winner's row: the name is what the eye is looking for. */
+.sheet-table td .deck { display: block; color: var(--muted); font-size: 0.78rem; font-weight: 400; }
+.sheet-table .unclaimed td { color: var(--muted); }
+
+/* Who hit whom. Rows are damage dealt, columns damage taken, so the eye should
+   land on the margins -- they carry the story (the tallest Taken figure is the
+   match's archenemy), while most interior cells are zero. */
+.matrix { margin: 0.4rem 0 1.4rem; width: auto; min-width: 60%; }
+.matrix caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.matrix tbody th { font-weight: 600; }
+/* The diagonal is structurally impossible, not merely empty. */
+.matrix .self { color: var(--line); }
+/* A real zero, dimmed so the numbers that happened stand out from the ones
+   that did not. Without this a 4x4 grid reads as an undifferentiated block. */
+.matrix .zero { color: var(--muted); }
+.matrix .total { font-weight: 700; }
+.matrix tfoot th, .matrix tfoot td { border-top: 2px solid var(--line); border-bottom: 0; }
+
+/* Expands the abbreviated column headings in the game-by-game tables. */
+.legend {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.legend strong { color: var(--text); }
+
+.sheet-foot { margin-top: 2rem; color: var(--muted); font-size: 0.8rem; }
+
+/* The game-by-game tables are the widest thing here; let them scroll on a
+   phone rather than push the page sideways. */
+@media (max-width: 34rem) {
+  .round-detail table { display: block; overflow-x: auto; white-space: nowrap; }
+}
+
+/* --- paper --------------------------------------------------------------- */
+
+@media print {
+  /* Ink, and legibility: the screen theme is white-on-near-black. */
+  :root { --text: #000; --muted: #444; --line: #999; --bad: #000; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  main { max-width: none; padding: 0; }
+
+  /* Navigation and a print button are meaningless once printed. */
+  .topbar, .sheet-actions { display: none !important; }
+
+  .sheet-head h1 { font-size: 18pt; }
+  .sheet-section h2 { font-size: 13pt; }
+  .sheet-table { font-size: 9.5pt; }
+  .sheet-table th, .sheet-table td { padding: 0.15rem 0.4rem; }
+  /* Eleven columns across ~180mm of usable A4: tighten the stat columns and
+     let nothing but the player name claim width. */
+  .round-detail .sheet-table { font-size: 8pt; table-layout: fixed; }
+  .round-detail .sheet-table th, .round-detail .sheet-table td { padding: 0.1rem 0.2rem; }
+  .sheet-table td .deck { font-size: 7pt; }
+  .legend { font-size: 7.5pt; }
+  /* The matrix is narrow (pod-size + 2 columns), so it keeps the readable
+     table-auto width the stat tables have to give up. */
+  .matrix { font-size: 8.5pt; table-layout: auto; min-width: 0; }
+  .matrix th, .matrix td { padding: 0.1rem 0.35rem; }
+
+  /* Keep a section, and any single game's table, from being split across a
+     page break mid-row. */
+  .sheet-section { break-inside: avoid; margin-bottom: 1.2rem; }
+  .round-detail h3 { break-after: avoid; }
+  .round-detail table { break-inside: avoid; }
+  tr { break-inside: avoid; }
+
+  /* Standings and awards are the sheet; the per-game detail is the appendix. */
+  .round-detail { break-before: page; }
+
+  a[href]::after { content: ""; }
+}
+
+@page { margin: 15mm; }

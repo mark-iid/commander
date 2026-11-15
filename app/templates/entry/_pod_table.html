@@ -1,0 +1,84 @@
+{# `oob` is set only by _panel.html, so the same partial serves the initial page
+   render and out-of-band HTMX swaps. #}
+<section id="pod-table" class="card"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <div class="card-head">
+    <h2>Pod {{ pod }} · Match {{ match_no }}</h2>
+    {# Counts players who have FINISHED, not players who have a row: every
+       seated player has a row from the moment the table is set, so counting
+       rows would show "4 of 4" before a card was played. #}
+    {% set finished = pod_stats | selectattr('placement') | list | length %}
+    <span class="badge{% if finished >= pod_size %} ok{% endif %}">
+      {{ finished }} of {{ pod_size }} finished
+    </span>
+  </div>
+
+  {% if not seating %}
+    <p class="empty">This table has not been set yet.</p>
+  {% else %}
+    <h3>Totals so far <small class="legend-note">derived from the turns below</small></h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Player</th>
+            <th scope="col">Place</th>
+            <th scope="col">Life</th>
+            {% for f in game_stat_fields %}<th scope="col" class="num">{{ f.short }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in pod_stats %}
+            <tr{% if s.player == player %} class="current"{% endif %}>
+              <th scope="row">{{ s.player }}</th>
+              <td>{{ s.placement if s.placement else '—' }}</td>
+              <td>{{ s.final_life if s.placement else '—' }}</td>
+              {% for f in game_stat_fields %}<td class="num">{{ s|attr(f.name) }}</td>{% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if rounds_played %}
+      <h3>Turns entered <small class="legend-note">combat damage per turn, tap one to open it</small></h3>
+      <div class="table-scroll">
+        <table class="turn-grid">
+          <thead>
+            <tr>
+              <th scope="col">Player</th>
+              {% for r in range(1, rounds_played + 1) %}
+                <th scope="col" class="num">R{{ r }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for name in seating %}
+              <tr{% if name == player %} class="current"{% endif %}>
+                <th scope="row">{{ name }}</th>
+                {% for r in range(1, rounds_played + 1) %}
+                  {% set t = turn_grid.get((name, r)) %}
+                  {# The cell shows that turn's combat damage, which is the
+                     number a tracker is most likely to be checking for a typo.
+                     A blank cell means the turn was never entered. Either way
+                     it opens that turn, since this grid is where a wrong or
+                     missing one gets spotted. #}
+                  {% set q = {'pod': pod, 'match_no': match_no, 'player': name, 'round_no': r} | urlencode %}
+                  <td class="num{% if not t %} missing{% endif %}{% if name == player and r == round_no %} here{% endif %}">
+                    <a href="{{ url_for('entry_index').path }}?{{ q }}"
+                       hx-get="{{ url_for('entry_form').path }}?{{ q }}"
+                       hx-target="#entry-panel" hx-swap="outerHTML"
+                       aria-label="{{ name }}, round {{ r }}">
+                      {%- if t %}{{ t.damage.values() | sum }}{% else %}·{% endif -%}
+                    </a>
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty">No turns recorded for this match yet.</p>
+    {% endif %}
+  {% endif %}
+</section>

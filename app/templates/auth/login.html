@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Commander Tracker{% endblock %}
+
+{% block content %}
+<h1>Sign in</h1>
+
+{% if warning %}
+  {# Not an error — the passcode may be perfectly correct. This is the one case
+     where a correct sign-in still lands back on this page. #}
+  <p class="transport-warning">{{ warning }}</p>
+{% endif %}
+
+<form class="card{% if error %} has-errors{% endif %}" method="post" action="/login">
+  <input type="hidden" name="next" value="{{ next }}">
+
+  <div class="card-head">
+    <h2>Tracker passcode</h2>
+    {% if error %}<span class="badge bad">{{ error }}</span>{% endif %}
+  </div>
+
+  <label class="field">
+    <span>Passcode</span>
+    {# autofocus + current-password so phone keyboards and password managers
+       behave; trackers sign in on their own devices at the table. #}
+    <input type="password" name="passcode" autocomplete="current-password"
+           autocapitalize="none" autocorrect="off" spellcheck="false" autofocus required>
+    <small>Shared passcode for this event. Ask the organiser.</small>
+  </label>
+
+  <div class="actions">
+    <button type="submit">Sign in</button>
+    <span class="hint">Signing in covers data entry and admin on this device.</span>
+  </div>
+</form>
+{% endblock %}

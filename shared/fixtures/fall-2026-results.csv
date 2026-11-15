@@ -1,0 +1,25 @@
+match,pod,player,commander,placement,final_life,combat_dmg_dealt,noncombat_dmg_dealt,cmdr_dmg_dealt,opps_eliminated,biggest_attack_dealt,biggest_attack_taken,most_creatures_in_attack,total_graveyard
+1,A,Erin,Kaalia of the Vast,1,40,58,0,6,3,53,0,2,2
+1,A,Heidi,"Omnath, Locus of All",2,0,0,0,0,0,0,12,0,3
+1,A,Alice,"Gishath, Sun’s Avatar",3,-6,0,0,0,0,0,23,0,0
+1,A,Frank,"Pantlaza, Sun-Favored",4,-1,0,0,0,0,0,18,0,0
+1,B,Carol,Omnath,1,34,10052,0,6,3,10046,3,3,1
+1,B,Bob,Spirit Dragon,2,-35,5,0,0,0,3,47,3,13
+1,B,Dave,Etail,3,-9997,0,0,0,0,0,9999,1,4
+1,B,Grace,Niv-Mizzet,4,0,0,0,0,0,0,0,0,12
+2,A,Heidi,"Tsagan, Raider Warlord",1,28,79,2,16,1,65,4,7,9
+2,A,Erin,Lord of the Nazgûl,2,-1,10,0,10,1,6,12,1,11
+2,A,Grace,"Niv-Mizzet, Parun",3,-4,2,0,0,0,2,19,1,9
+2,A,Dave,"Valgavoth, Harrower of Souls",4,-1,0,0,0,0,0,34,0,2
+2,B,Alice,Chatterfang,1,65,43,0,17,3,14,0,10,1
+2,B,Carol,Omnath,2,-2,19,0,17,0,17,8,1,3
+2,B,Bob,Samwise Gamgee,3,-2,2,0,2,0,2,7,2,2
+2,B,Frank,Michelangelo / Leonardo,4,-5,2,0,2,0,2,17,1,1
+3,A,Bob,Samwise Gamgee,1,36,496,0,2,3,342,2,8,0
+3,A,Frank,"Pantlaza, Sun Favored",2,-337,0,0,0,0,0,342,0,10
+3,A,Alice,Eriette of the Charmed Apple,3,-26,2,0,0,0,2,57,1,3
+3,A,Dave,"Venom, Lethal Protector",4,-27,0,0,0,0,0,57,0,4
+3,B,Carol,Flamewar,1,15,49,50,49,3,28,5,3,15
+3,B,Erin,Doran,2,-15,5,0,0,0,5,5,1,2
+3,B,Grace,Niv,3,18,0,1,0,0,0,16,0,6
+3,B,Heidi,Volo,4,18,0,0,0,0,0,12,0,5

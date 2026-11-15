@@ -1,0 +1,36 @@
+{# The whole per-table surface. One hx-target for every save, so a turn, a
+   finish and a reseat all swap the same node and nothing can drift apart. #}
+<div id="entry-panel">
+  {# The page scrolls here after every save (see entry/index.html), so this is
+     the first thing the tracker sees: proof the last tap landed. #}
+  {% if saved %}<p class="saved" role="status">✓ {{ saved }}</p>{% endif %}
+
+  {% if not seating %}
+    {% include "entry/_seating.html" %}
+  {% else %}
+    {# Above the turn form, and only while there are eliminations credited on a
+       turn that nobody has been recorded against yet: for as long as it is
+       here it is the thing to do next, and recording them removes it. #}
+    {% if deaths_due %}{% include "entry/_eliminations.html" %}{% endif %}
+
+    {% include "entry/_turn_form.html" %}
+    {% include "entry/_final_form.html" %}
+
+    {# Both once-per-match forms, below the per-turn ones that are tapped all
+       game. Open the decks one when a box is why the form came back. #}
+    <details class="card decks-wrap"{% if errors.get('commanders') %} open{% endif %}>
+      <summary>Commanders for this match</summary>
+      {% include "entry/_commanders.html" %}
+    </details>
+
+    <details class="card reseat">
+      <summary>Change who is at this table</summary>
+      {% include "entry/_seating.html" %}
+    </details>
+  {% endif %}
+</div>
+
+{% if not full_page %}
+  {% set oob = true %}
+  {% include "entry/_pod_table.html" %}
+{% endif %}

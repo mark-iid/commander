@@ -1,0 +1,348 @@
+/* Norton-style theme for the projected display.
+ *
+ * Palette and idiom taken from the Norton Simple WordPress theme
+ * (../NortonUtilsWordpressTheme/assets/css/norton.css) so the two read as the
+ * same house style. Rules of that theme, kept here deliberately:
+ *
+ *   - #000080 is the ONLY surface color. Separation comes from bevels, never
+ *     from tonal panels.
+ *   - Raised bevel = #5555ff top/left, #000000 bottom/right. Pressed = inverse.
+ *   - Cyan-on-blue inversion is the selection bar (the DOS highlight).
+ *   - Yellow / green / red are reserved for alert semantics, matching the
+ *     theme's [!] / [/] / [x] alert prefixes. They are not decoration.
+ *   - Courier New throughout, uppercase + letter-spacing on headings.
+ *   - CRT edge fades on the left and right.
+ *
+ * Sized for a projector at the back of a room: large type, no page scroll.
+ */
+
+:root {
+  --nb-bg: #000080;
+  --nb-shadow: #000000;
+  /* Bevel edge. Named for its job: it was previously called --nb-light and got
+     used as muted text, which measures 3.15:1 on #000080 — failing WCAG AA and
+     unreadable on a projector. A name that cannot be misread beats a comment. */
+  --nb-bevel: #5555ff;
+  /* Secondary text. 7.55:1 on the background — AAA. */
+  --nb-dim: #aaaaff;
+  --nb-text: #ffffff;
+  --nb-cyan: #00ffff;
+  --nb-warn: #ffff00;
+  --nb-ok: #00ff00;
+  --nb-err: #ff0000;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Full-viewport flex column: header and status bar are fixed height, the board
+   takes everything left over. A projected display must fill the screen and
+   never scroll — empty space at the bottom is wasted legibility. */
+/* ONE KNOB for the whole board.
+   Every size below is em/rem off this, so the display scales as a unit instead
+   of eleven independent clamps each hitting its own ceiling — which is what it
+   used to do: above ~1500px wide every single font-size froze, and a 1920
+   projector rendered type chosen for a 1300px laptop window.
+
+   The vh term is load-bearing. Sizing on vw alone gives a 4:3 projector type
+   scaled for a width it has, in a height it does not, and the board overflows.
+   Mixing the two lets the shorter axis hold it back. */
+html { font-size: clamp(11px, 0.55vw + 0.95vh, 32px); }
+
+body {
+  background: var(--nb-bg);
+  color: var(--nb-text);
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1.4;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+#board { flex: 1 1 auto; min-height: 0; display: flex; }
+
+/* CRT edge fade, straight from the theme. Narrower than the theme's 120px so a
+   4:3 projector doesn't lose a column of the board to the vignette. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 70px;
+  pointer-events: none;
+  z-index: 1000;
+}
+body::before {
+  left: 0;
+  background: linear-gradient(to right, #000 0%, #000 25%, rgba(0,0,0,.7) 60%, transparent 100%);
+}
+body::after {
+  right: 0;
+  background: linear-gradient(to left, #000 0%, #000 25%, rgba(0,0,0,.7) 60%, transparent 100%);
+}
+
+/* Raised bevel */
+.nb {
+  border-top: 2px solid var(--nb-bevel);
+  border-left: 2px solid var(--nb-bevel);
+  border-bottom: 2px solid var(--nb-shadow);
+  border-right: 2px solid var(--nb-shadow);
+}
+/* Pressed bevel */
+.nbi {
+  border-top: 2px solid var(--nb-shadow);
+  border-left: 2px solid var(--nb-shadow);
+  border-bottom: 2px solid var(--nb-bevel);
+  border-right: 2px solid var(--nb-bevel);
+}
+
+/* --- header ------------------------------------------------------------- */
+
+#hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 10px 80px;
+  text-align: center;
+}
+.site-title {
+  color: var(--nb-cyan);
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.hdr-right { text-align: right; white-space: nowrap; }
+.clock {
+  color: var(--nb-cyan);
+  font-size: 1.8rem;
+  font-weight: bold;
+  line-height: 1;
+}
+.dateline {
+  color: var(--nb-text);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* --- layout ------------------------------------------------------------- */
+
+#main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 32% 1fr;
+  gap: 10px;
+  padding: 0 80px 10px;
+}
+/* The phone layout lives at the BOTTOM of this file, not here. A media query
+   adds no specificity, so an override only wins by coming later in the source —
+   and .standings, .prizes and #foot are all defined below this point. */
+
+/* Panels are flex columns so their content stretches to the panel's full
+   height rather than clustering at the top. */
+.panel {
+  background: var(--nb-bg);
+  padding: 0 0 6px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ptitle { flex: 0 0 auto; }
+
+/* Panel header = the inverted cyan bar. */
+.ptitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  background: var(--nb-cyan);
+  color: #000000;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 0.15em 0.5em;
+  margin-bottom: 6px;
+}
+
+/* --- standings ---------------------------------------------------------- */
+
+table { width: 100%; border-collapse: collapse; }
+
+/* height:100% lets the rows share the panel's spare vertical space, so a
+   4-player roster reads large from across the room instead of hugging the top.
+
+   The row size lives HERE, on the table, and the cells inherit it. That
+   placement is the whole point rather than a detail: `em` in a cell resolves
+   against the cell's PARENT, so while the size sat on the cells themselves the
+   row never carried it, and `.dmg { font-size: .6em }` quietly meant 60% of the
+   ROOT instead of 60% of the row -- 12px beside a 50px player name, the
+   smallest text on a projected board. Sizing the table makes every em below
+   mean what it reads as.
+
+   Big as the panel allows, never bigger than the roster leaves room for.
+   --rows comes from the template. The denominator is the table's own height in
+   ems: 1.6 per body row (line-height plus padding), plus 1.0 for the header
+   row, which the old budget left out entirely. 80vh is what survives the page
+   header, status bar, panel title and gutters. Four players get the cap;
+   sixteen get whatever still fits, which is the entire point -- the board
+   cannot scroll. */
+.standings {
+  flex: 1 1 auto;
+  height: 100%;
+  font-size: min(2.4rem, calc(80vh / (var(--rows, 4) * 1.6 + 1.0)));
+}
+
+.standings td, .standings th {
+  padding: 0.1em 0.35em;
+  font-size: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+.standings thead th {
+  color: var(--nb-cyan);
+  /* An em, so the headings track the rows they label instead of freezing at a
+     rem while the roster shrinks around them. */
+  font-size: 0.62em;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+/* Measured in Edge, not reasoned about: `.standings thead th` is one class and
+   two elements (0,1,2), `.standings .dmg` is two classes (0,2,0), and class
+   count is compared first -- so the column rule won and the Dmg heading came
+   out at 0.72em while the headings beside it sat at 0.62em. One more element
+   here outranks it and the heading row reads as one row again. */
+.standings thead th.dmg { font-size: 0.62em; }
+
+.standings .rank { width: 2.5em; }
+.standings .pts, .standings .dmg { text-align: right; }
+.standings .pts { color: var(--nb-cyan); font-weight: bold; }
+/* The tiebreaker behind Pts, so it stays a step below the name and the points
+   it breaks ties for -- a step, not a whisper. */
+.standings .dmg { color: var(--nb-dim); font-size: 0.72em; }
+/* Leader gets the DOS selection bar: cyan ground, blue text. */
+.standings tr.leader td { background: var(--nb-cyan); color: var(--nb-bg); font-weight: bold; }
+.standings tr.leader .pts, .standings tr.leader .dmg { color: var(--nb-bg); }
+/* Nobody has played yet. Still fully legible — before the first game every
+   row is idle, so this is the whole left panel. */
+.standings tr.idle td { color: var(--nb-dim); }
+
+/* --- prizes ------------------------------------------------------------- */
+
+.prizes {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  padding: 0 6px;
+}
+.prize {
+  background: var(--nb-bg);
+  padding: 0.4em 0.6em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+/* Wraps rather than truncates: these are novelty prize names and the joke is
+   the point — "Yeah, But How Many Were 1/1s?" must not become "Were 1/1…". */
+.prize .name {
+  display: block;
+  color: var(--nb-cyan);
+  font-size: 1.35rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.prize .winner {
+  display: block;
+  color: var(--nb-text);
+  font-size: 1.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prize .winner::before { content: "\25BA\00a0\00a0"; color: var(--nb-cyan); }
+.prize .value { color: var(--nb-cyan); font-size: 1rem; }
+/* A placeholder, not news. Shrunk so it stops out-shouting the prize name
+   it sits under — with 11 of them on screen it is pure repetition. */
+.prize.unclaimed .winner { color: var(--nb-dim); font-weight: normal; font-size: 1.25rem; }
+.prize.unclaimed .winner::before { content: "\2022\00a0\00a0"; color: var(--nb-dim); }
+
+.empty {
+  display: block;
+  padding: 10px;
+  color: var(--nb-dim);
+  font-style: italic;
+  font-size: 1rem;
+}
+
+/* --- status bar --------------------------------------------------------- */
+/* Solid cyan footer with bold black text, as the theme does it. */
+
+#foot {
+  flex: 0 0 auto;
+  z-index: 1001;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  /* Same gutter as #hdr and #main: the status bar sits above the CRT edge
+     fade (z-index), so a narrower gutter put its text out in the vignette
+     where it read as running off the screen. */
+  padding: 0.15em 80px;
+  background: var(--nb-cyan);
+  color: #000000;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Connection state uses the theme's alert semantics: green ok, yellow warning,
+   red error. The prefix glyphs match its [!] / [/] / [x] alert convention. */
+.live::before { content: "[!] "; }
+.live { color: #7a6000; }  /* 4.78:1 on cyan; #806600 was 4.39:1, under AA */
+body.sse-up .live::before { content: "[\2713] "; }
+body.sse-up .live { color: #006600; }
+body.sse-down .live::before { content: "[\2717] "; }
+body.sse-down .live { color: #990000; }
+
+/* --- phones and tablets -------------------------------------------------- */
+/* The display is built for a projector, but it is also the page anyone in the
+   room opens on their own screen to see where they stand.
+
+   Last in the file on purpose: a media query carries no extra specificity, so
+   every rule here beats its full-size counterpart only by coming after it. Move
+   this block up and the overrides below silently stop applying. */
+
+@media (max-width: 900px) {
+  /* The projector formula is mostly vh -- right for a 16:9 screen across a
+     room, wrong for a handset held at arm's length, where 390x844 lands on the
+     11px floor and renders the whole board as fine print. The page scrolls at
+     this width, so there is no height budget left to respect: pin a readable
+     base and let the content run. */
+  html { font-size: 17px; }
+  body { height: auto; overflow: auto; }
+  #main { grid-template-columns: 1fr; padding: 0 24px 24px; }
+  body::before, body::after { display: none; }
+  #hdr { padding: 10px 24px; flex-direction: column; }
+  .hdr-right { text-align: center; }
+  /* 80px of gutter each side leaves 200px of a 360px phone for the status bar. */
+  #foot { padding: 0.35em 24px; flex-wrap: wrap; }
+  /* Nothing left to fit into once the page scrolls, so drop the vh budget. */
+  .standings { height: auto; font-size: 1.35rem; }
+  /* minmax(15rem) still fits two columns on a large phone; one column keeps the
+     prize names on fewer lines. */
+  .prizes { grid-template-columns: 1fr; }
+}

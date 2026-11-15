@@ -1,0 +1,35 @@
+{
+ "rows": [
+  [
+   "plain",
+   1,
+   "",
+   null
+  ],
+  [
+   "Niv-Mizzet, Parun",
+   "he said \"hi\"",
+   "both, and \"quoted\"",
+   "trailing "
+  ],
+  [
+   "line\nbreak",
+   "carriage\rreturn",
+   "\"",
+   "''"
+  ],
+  [
+   " leading",
+   "tab\there",
+   "semi;colon",
+   "pipe|bar"
+  ],
+  [
+   "unicode ’ é",
+   "emoji 😀",
+   "0",
+   0
+  ]
+ ],
+ "csv": "plain,1,,\r\n\"Niv-Mizzet, Parun\",\"he said \"\"hi\"\"\",\"both, and \"\"quoted\"\"\",trailing \r\n\"line\nbreak\",\"carriage\rreturn\",\"\"\"\",''\r\n leading,tab\there,semi;colon,pipe|bar\r\nunicode ’ é,emoji 😀,0,0\r\n"
+}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Entry · {{ event.name }}{% endblock %}
+{% block heading %}{{ event.name }}{% endblock %}
+
+{% block content %}
+<h1>Data entry</h1>
+
+{% if not roster %}
+  <p class="empty">No players on the roster. Add a <code>roster:</code> list to your event
+  config (or use /admin) and reload.</p>
+{% else %}
+  {# Pod and match pick the table. Everything else — who is seated, whose turn,
+     which round — depends on that table, so it lives inside the panel. #}
+  <form id="selectors"
+        hx-get="{{ url_for('entry_form').path }}"
+        hx-target="#entry-panel"
+        hx-swap="outerHTML"
+        hx-trigger="change">
+    <label>
+      Pod
+      <select name="pod">
+        {% for p in pods %}
+          <option value="{{ p }}" {% if p == pod %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      Match
+      <select name="match_no">
+        {% for m in matches %}
+          <option value="{{ m }}" {% if m == match_no %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </form>
+
+  {# full_page suppresses the panel's out-of-band copy of the pod table: on the
+     first render the table is included here directly, and two nodes with the
+     same id would be an invalid document. #}
+  {% set full_page = true %}
+  {% include "entry/_panel.html" %}
+  {% include "entry/_pod_table.html" %}
+
+  <script>
+    // After the panel is swapped, show the tracker what happened. They tapped
+    // Save at the bottom of the form, but the confirmation, the next player's
+    // name and any field error are all above it, and htmx leaves the page
+    // scrolled where it was. An error goes to the middle of the screen, so the
+    // box it is about is in view; anything else goes to the top of the panel.
+    document.addEventListener("htmx:afterSettle", function (evt) {
+      var panel = document.getElementById("entry-panel");
+      if (!panel || !panel.contains(evt.detail.elt)) return;
+      var err = panel.querySelector(".err");
+      if (err) {
+        err.scrollIntoView({ block: "center" });
+      } else {
+        panel.scrollIntoView({ block: "start" });
+      }
+    });
+  </script>
+{% endif %}
+{% endblock %}

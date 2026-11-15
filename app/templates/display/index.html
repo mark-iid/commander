@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ event.name }} — Leaderboard</title>
+  {# asset() appends a content hash. This page matters most: the projector is
+     left open all evening and nobody hard-reloads it. See app/assets.py. #}
+  <link rel="stylesheet" href="{{ asset('/static/norton.css') }}">
+  <script src="{{ asset('/static/htmx.min.js') }}"></script>
+  <script src="{{ asset('/static/htmx-ext-sse.js') }}" defer></script>
+</head>
+{# Deliberately does not extend base.html: the display is a standalone kiosk
+   surface with its own theme and no navigation to click. #}
+<body hx-ext="sse" sse-connect="/display/stream">
+
+  <header id="hdr">
+    <span class="site-title">{{ event.name }}</span>
+    <span class="hdr-right">
+      <span class="clock" id="clock">--:--</span>
+      <span class="dateline" id="dateline"></span>
+    </span>
+  </header>
+
+  {# _board.html carries its own #board wrapper with the sse-swap attributes, so
+     an outerHTML swap replaces it with an element that is still subscribed.
+     Rendered server-side once here so the projector is correct the instant the
+     page loads, before any push arrives. #}
+  {% include "display/_board.html" %}
+
+  <footer id="foot">
+    <span class="live" id="live">Connecting</span>
+    <span>{{ event.name }} · Round-robin, {{ event.games_per_player }} games</span>
+  </footer>
+
+  <script>
+    // Clock. The only client-side state on this page — everything else is
+    // server-rendered and pushed.
+    function tick() {
+      const now = new Date();
+      document.getElementById("clock").textContent =
+        now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      document.getElementById("dateline").textContent =
+        now.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    // Reflect the SSE connection in the status bar, so a dead projector feed is
+    // visible in the room rather than silently frozen.
+    const live = document.getElementById("live");
+    document.body.addEventListener("htmx:sseOpen", () => {
+      document.body.classList.remove("sse-down");
+      document.body.classList.add("sse-up");
+      live.textContent = "Live";
+    });
+    document.body.addEventListener("htmx:sseError", () => {
+      document.body.classList.remove("sse-up");
+      document.body.classList.add("sse-down");
+      live.textContent = "Reconnecting";
+    });
+  </script>
+</body>
+</html>

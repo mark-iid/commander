@@ -1,0 +1,807 @@
+{
+ "elimination_prompts": [
+  {
+   "credits": [],
+   "deaths_due": 0,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "elimination_rows": [],
+   "just_credited": 0,
+   "out": {},
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     1
+    ]
+   ],
+   "deaths_due": 1,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "elimination_rows": [
+    {
+     "label": "4th \u2014 1 pt",
+     "order": "1st",
+     "place": 4
+    }
+   ],
+   "just_credited": 0,
+   "out": {},
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     1
+    ],
+    [
+     [
+      "Bob",
+      2
+     ],
+     1
+    ]
+   ],
+   "deaths_due": 2,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "elimination_rows": [
+    {
+     "label": "4th \u2014 1 pt",
+     "order": "1st",
+     "place": 4
+    },
+    {
+     "label": "3rd \u2014 2 pts",
+     "order": "2nd",
+     "place": 3
+    }
+   ],
+   "just_credited": 0,
+   "out": {},
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     1
+    ]
+   ],
+   "deaths_due": 0,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol"
+   ],
+   "elimination_rows": [],
+   "just_credited": 0,
+   "out": {
+    "Dave": 4
+   },
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     3
+    ]
+   ],
+   "deaths_due": 1,
+   "elimination_candidates": [
+    "Bob"
+   ],
+   "elimination_rows": [
+    {
+     "label": "1st \u2014 4 pts",
+     "order": "1st",
+     "place": 1
+    }
+   ],
+   "just_credited": 0,
+   "out": {
+    "Alice": 1,
+    "Carol": 3,
+    "Dave": 4
+   },
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     9
+    ]
+   ],
+   "deaths_due": 4,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "elimination_rows": [
+    {
+     "label": "4th \u2014 1 pt",
+     "order": "1st",
+     "place": 4
+    },
+    {
+     "label": "3rd \u2014 2 pts",
+     "order": "2nd",
+     "place": 3
+    },
+    {
+     "label": "2nd \u2014 3 pts",
+     "order": "3rd",
+     "place": 2
+    },
+    {
+     "label": "1st \u2014 4 pts",
+     "order": "4th",
+     "place": 1
+    }
+   ],
+   "just_credited": 0,
+   "out": {},
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     1
+    ]
+   ],
+   "deaths_due": 1,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol"
+   ],
+   "elimination_rows": [
+    {
+     "label": "3rd \u2014 2 pts",
+     "order": "1st",
+     "place": 3
+    }
+   ],
+   "just_credited": 1,
+   "out": {
+    "Dave": 4
+   },
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     3
+    ]
+   ],
+   "deaths_due": 3,
+   "elimination_candidates": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "elimination_rows": [
+    {
+     "label": "4th \u2014 1 pt",
+     "order": "1st",
+     "place": 4
+    },
+    {
+     "label": "3rd \u2014 2 pts",
+     "order": "2nd",
+     "place": 3
+    },
+    {
+     "label": "2nd \u2014 3 pts",
+     "order": "3rd",
+     "place": 2
+    }
+   ],
+   "just_credited": 1,
+   "out": {},
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": {
+    "label": "1st \u2014 4 pts",
+    "place": 1
+   }
+  },
+  {
+   "credits": [
+    [
+     [
+      "Alice",
+      1
+     ],
+     2
+    ]
+   ],
+   "deaths_due": 0,
+   "elimination_candidates": [
+    "Alice",
+    "Bob"
+   ],
+   "elimination_rows": [],
+   "just_credited": 0,
+   "out": {
+    "Carol": 2,
+    "Dave": 3
+   },
+   "seating": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "winner_row": null
+  }
+ ],
+ "finishing_orders": [
+  {
+   "places": {
+    "Dave": 4
+   },
+   "rows": [
+    [
+     "Dave",
+     -3
+    ]
+   ],
+   "simultaneous": false,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Carol": 3,
+    "Dave": 4
+   },
+   "rows": [
+    [
+     "Dave",
+     -3
+    ],
+    [
+     "Carol",
+     -8
+    ]
+   ],
+   "simultaneous": false,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Bob": 2,
+    "Carol": 3,
+    "Dave": 4
+   },
+   "rows": [
+    [
+     "Dave",
+     -3
+    ],
+    [
+     "Carol",
+     -8
+    ],
+    [
+     "Bob",
+     -1
+    ]
+   ],
+   "simultaneous": false,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Carol": 4,
+    "Dave": 3
+   },
+   "rows": [
+    [
+     "Dave",
+     -1
+    ],
+    [
+     "Carol",
+     -9
+    ]
+   ],
+   "simultaneous": true,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Carol": 3,
+    "Dave": 3
+   },
+   "rows": [
+    [
+     "Dave",
+     -5
+    ],
+    [
+     "Carol",
+     -5
+    ]
+   ],
+   "simultaneous": true,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Bob": 2,
+    "Carol": 2,
+    "Dave": 2
+   },
+   "rows": [
+    [
+     "Dave",
+     0
+    ],
+    [
+     "Carol",
+     0
+    ],
+    [
+     "Bob",
+     0
+    ]
+   ],
+   "simultaneous": true,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Bob": 2,
+    "Carol": 3,
+    "Dave": 3
+   },
+   "rows": [
+    [
+     "Dave",
+     -5
+    ],
+    [
+     "Carol",
+     -5
+    ],
+    [
+     "Bob",
+     -1
+    ]
+   ],
+   "simultaneous": true,
+   "still_in": 4
+  },
+  {
+   "places": {
+    "Carol": 3,
+    "Dave": 2
+   },
+   "rows": [
+    [
+     "Dave",
+     12
+    ],
+    [
+     "Carol",
+     3
+    ]
+   ],
+   "simultaneous": true,
+   "still_in": 3
+  },
+  {
+   "places": {
+    "Bob": 2
+   },
+   "rows": [
+    [
+     "Bob",
+     -2
+    ]
+   ],
+   "simultaneous": false,
+   "still_in": 2
+  },
+  {
+   "places": {},
+   "rows": [],
+   "simultaneous": false,
+   "still_in": 4
+  }
+ ],
+ "next_up": [
+  {
+   "entered": [],
+   "out": [],
+   "played": 0,
+   "player": "Alice",
+   "round_no": 1
+  },
+  {
+   "entered": [
+    [
+     "Alice",
+     1
+    ]
+   ],
+   "out": [],
+   "played": 1,
+   "player": "Bob",
+   "round_no": 1
+  },
+  {
+   "entered": [
+    [
+     "Alice",
+     1
+    ],
+    [
+     "Bob",
+     1
+    ],
+    [
+     "Carol",
+     1
+    ],
+    [
+     "Dave",
+     1
+    ]
+   ],
+   "out": [],
+   "played": 1,
+   "player": "Alice",
+   "round_no": 2
+  },
+  {
+   "entered": [],
+   "out": [
+    "Alice"
+   ],
+   "played": 1,
+   "player": "Bob",
+   "round_no": 1
+  },
+  {
+   "entered": [
+    [
+     "Carol",
+     2
+    ]
+   ],
+   "out": [
+    "Alice",
+    "Bob"
+   ],
+   "played": 2,
+   "player": "Dave",
+   "round_no": 2
+  },
+  {
+   "entered": [],
+   "out": [
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "played": 3,
+   "player": "Alice",
+   "round_no": 3
+  }
+ ],
+ "note": "Generated by scripts/entry_rules_fixture.py from app/routes/entry.py.",
+ "ordinals": [
+  {
+   "n": 1,
+   "ordinal": "1st"
+  },
+  {
+   "n": 2,
+   "ordinal": "2nd"
+  },
+  {
+   "n": 3,
+   "ordinal": "3rd"
+  },
+  {
+   "n": 4,
+   "ordinal": "4th"
+  },
+  {
+   "n": 5,
+   "ordinal": "5th"
+  },
+  {
+   "n": 10,
+   "ordinal": "10th"
+  },
+  {
+   "n": 11,
+   "ordinal": "11th"
+  },
+  {
+   "n": 12,
+   "ordinal": "12th"
+  },
+  {
+   "n": 13,
+   "ordinal": "13th"
+  },
+  {
+   "n": 14,
+   "ordinal": "14th"
+  },
+  {
+   "n": 20,
+   "ordinal": "20th"
+  },
+  {
+   "n": 21,
+   "ordinal": "21st"
+  },
+  {
+   "n": 22,
+   "ordinal": "22nd"
+  },
+  {
+   "n": 23,
+   "ordinal": "23rd"
+  },
+  {
+   "n": 24,
+   "ordinal": "24th"
+  },
+  {
+   "n": 100,
+   "ordinal": "100th"
+  },
+  {
+   "n": 101,
+   "ordinal": "101st"
+  },
+  {
+   "n": 111,
+   "ordinal": "111th"
+  },
+  {
+   "n": 112,
+   "ordinal": "112th"
+  }
+ ],
+ "placement_labels": [
+  {
+   "label": "1st \u2014 4 pts",
+   "place": 1,
+   "points": 4
+  },
+  {
+   "label": "2nd \u2014 3 pts",
+   "place": 2,
+   "points": 3
+  },
+  {
+   "label": "3rd \u2014 2 pts",
+   "place": 3,
+   "points": 2
+  },
+  {
+   "label": "4th \u2014 1 pt",
+   "place": 4,
+   "points": 1
+  },
+  {
+   "label": "5th \u2014 0 pts",
+   "place": 5,
+   "points": 0
+  },
+  {
+   "label": "11th \u2014 1 pt",
+   "place": 11,
+   "points": 1
+  },
+  {
+   "label": "21st \u2014 2 pts",
+   "place": 21,
+   "points": 2
+  }
+ ],
+ "placement_points": {
+  "1": 4,
+  "2": 3,
+  "3": 2,
+  "4": 1
+ },
+ "pod_sizes": [
+  {
+   "expected": 4,
+   "placements": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "pod_size": null
+  },
+  {
+   "expected": 4,
+   "placements": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "pod_size": 4
+  },
+  {
+   "expected": 2,
+   "placements": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "pod_size": 2
+  },
+  {
+   "expected": 2,
+   "placements": [
+    1,
+    2
+   ],
+   "pod_size": null
+  }
+ ],
+ "seat_after": [
+  {
+   "next_player": "Bob",
+   "next_round": 1,
+   "out": [],
+   "player": "Alice",
+   "round_no": 1
+  },
+  {
+   "next_player": "Alice",
+   "next_round": 2,
+   "out": [],
+   "player": "Dave",
+   "round_no": 1
+  },
+  {
+   "next_player": "Carol",
+   "next_round": 2,
+   "out": [
+    "Bob"
+   ],
+   "player": "Alice",
+   "round_no": 2
+  },
+  {
+   "next_player": "Dave",
+   "next_round": 2,
+   "out": [
+    "Bob",
+    "Carol"
+   ],
+   "player": "Alice",
+   "round_no": 2
+  },
+  {
+   "next_player": "Alice",
+   "next_round": 6,
+   "out": [
+    "Bob",
+    "Carol",
+    "Dave"
+   ],
+   "player": "Alice",
+   "round_no": 5
+  },
+  {
+   "next_player": "Bob",
+   "next_round": 4,
+   "out": [
+    "Alice"
+   ],
+   "player": "Dave",
+   "round_no": 3
+  }
+ ],
+ "table": [
+  "Alice",
+  "Bob",
+  "Carol",
+  "Dave"
+ ]
+}

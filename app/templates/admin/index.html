@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ event.name }}{% endblock %}
+{% block heading %}{{ event.name }}{% endblock %}
+
+{% block content %}
+<h1>Roster</h1>
+<p class="hint">Your event config seeds this list once, when the event is new. After that
+this page owns it — config changes to <code>roster:</code> are ignored.</p>
+
+{% include "admin/_roster.html" %}
+
+{% include "admin/_reset.html" %}
+{% endblock %}

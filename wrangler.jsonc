@@ -1,0 +1,61 @@
+// Phases 1 and 2 of docs/adr/0003: the Worker, its D1 binding and the
+// migrations directory. Phase 3 adds the Durable Object the SSE stream needs.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "commander-tracker",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  // The only hostname it answers on. workers_dev is off so the app is not also
+  // reachable at a workers.dev subdomain nobody is watching: /entry and /admin
+  // are passcode-gated, and a second public front door is a second thing to
+  // remember to gate.
+  "workers_dev": false,
+  "routes": [{ "pattern": "mtg.earnestdesigns.com", "custom_domain": true }],
+  // nodejs_compat is NOT set on purpose: nothing in worker/ uses a node API,
+  // and leaving it off keeps that true by failing the build if it creeps in.
+  "assets": {
+    "directory": "./app/static",
+    "binding": "ASSETS",
+    // Everything is a route the Worker answers; static files are fetched
+    // through the binding from the layout's asset() helper.
+    "run_worker_first": true
+  },
+  // The projected board's subscriber set. app/events.py was an in-process
+  // broadcaster, which worked because the deployment pinned --workers 1;
+  // Workers isolates do not share memory, so the fan-out needs one object that
+  // every isolate can reach. See docs/adr/0003 phase 3.
+  "durable_objects": {
+    "bindings": [{ "name": "BOARD", "class_name": "Board" }]
+  },
+  // No durable storage is used: the subscribers are connections, which cannot
+  // outlive the object anyway. SQLite-backed because that is the current
+  // default for a new class.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Board"] }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "commander-tracker",
+      // Filled in from the output of `wrangler d1 create commander-tracker`.
+      // Until then only --local works, which is what the tests use.
+      "database_id": "PLACEHOLDER",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // TRACKER_PASSCODE and SESSION_SECRET are secrets and are deliberately NOT
+  // here: .dev.vars locally, `wrangler secret put` in production. See
+  // .dev.vars.example. `wrangler types` reads .dev.vars to type them.
+  "vars": {
+    // How long a tracker stays signed in. One long game night.
+    "SESSION_HOURS": "12",
+    // The room's clock. A Worker has no local timezone, so without this the
+    // results sheet's "generated" line and the CSV filenames would be stamped
+    // in UTC: a download at 10pm on a Friday in the US would be dated
+    // Saturday, which is wrong on the one artefact people keep. An IANA name.
+    "EVENT_TIMEZONE": "America/New_York",
+    // Whether the projected board needs the passcode too. It is the one
+    // surface that is read-only and wanted on a screen in the room, so it is
+    // open by default; turn this on if the standings should not be public.
+    "PROTECT_DISPLAY": "false"
+  },
+  "observability": { "enabled": true }
+}

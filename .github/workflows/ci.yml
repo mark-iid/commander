@@ -1,0 +1,72 @@
+# Lint, typecheck and both test suites, on every push and pull request.
+#
+# Two suites because the repository holds two halves of a port in progress (see
+# docs/adr/0003): the FastAPI app in app/, which still serves the event, and the
+# Cloudflare Worker in worker/, which is replacing it. Neither is allowed to go
+# red, and four fixture gates in the pytest suite compare the two against each
+# other, so a change to one side that the other has not followed fails here.
+#
+# No deploy job. The Worker is deployed by Cloudflare Workers Builds, which
+# watches this repository directly, so a deploy step here would be a second
+# thing doing the same job out of step with the first. The FastAPI app is
+# deployed from the maintainer's own Forgejo instance; see .forgejo/.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: ruff and pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          # The version the LXC deployment runs. The package declares 3.12 as
+          # its minimum; pinning one here keeps the fixture comparisons
+          # byte-stable, which matters because two of them are byte comparisons.
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -e ".[dev]"
+
+      # Bare `ruff check` on purpose: the rule set is pinned in pyproject.toml,
+      # so this gives CI exactly the same answer a contributor gets locally.
+      # Before the tests, so a style failure is not buried under a test log.
+      - run: ruff check .
+
+      - run: pytest -q
+
+  worker:
+    name: tsc and vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # npm 11 blocks package install scripts unless they are listed in
+      # allowScripts in package.json. workerd and esbuild are listed there, so
+      # `npm ci` runs theirs and the Worker runtime actually installs. Without
+      # that the vitest step fails on a missing binary.
+      - run: npm ci
+
+      # The Worker tests run inside workerd against a real D1 built from
+      # migrations/, so this needs no Cloudflare account and no network beyond
+      # the install.
+      - run: npx tsc -b
+
+      - run: npx vitest run

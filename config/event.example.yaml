@@ -1,0 +1,154 @@
+# Example event config. Copy to config/event.yaml and edit.
+# The scoring engine is generic: it reads everything below, so a new event
+# (or a new prize) is a config change, not a code change.
+
+event:
+  name: "Fall 2026 Battle of the Commanders"
+  games_per_player: 3
+  # Concurrent tables. Entry creates exactly one game per (pod, match), and the
+  # match selector runs 1..games_per_player. Note "match" vs "round": a match is
+  # one of the night's games, a round is a turn cycle inside it.
+  pods: ["A", "B"]
+  # How many players sit at one pod. Optional: it defaults to the number of
+  # `placement_points` tiers below, since those are the finishing positions at a
+  # table — 1..4 is already the statement that a pod seats four. Set this only
+  # if your pods do not seat one player per placement (a house rule that ranks
+  # just the top two, say). It drives the "N of M entered" badge a tracker uses
+  # to know they are done with a table, and it is how many seats the "who is
+  # playing?" form offers.
+  # pod_size: 4
+
+auth:
+  # Policy only — the passcode itself lives in TRACKER_PASSCODE, never here.
+  # /entry and /admin always require it. Set this true to gate the projected
+  # leaderboard as well (recommended if the event is internet-reachable).
+  protect_display: false
+  # How long a tracker stays signed in. One long game night by default.
+  session_hours: 12
+  # Marks the session cookie Secure. Requires HTTPS — turn this on once the app
+  # is served through the Cloudflare Tunnel, leave off for plain-HTTP LAN use.
+  secure_cookies: false
+
+scoring:
+  # placement (1 = first) -> points awarded
+  placement_points:
+    1: 4
+    2: 3
+    3: 2
+    4: 1
+
+  # Tiebreaker basis for the win-point prizes, and any prize that uses
+  # tiebreak.field: total_damage.
+  # The tiebreaker is COMBAT damage dealt to players. Event owner's decision.
+  #
+  # Commander damage is deliberately absent: it is a subset of combat damage, not
+  # a separate kind. A player loses to "21 points of combat damage by a particular
+  # Commander" (https://mtgcommander.net/index.php/rules/), so every point of
+  # commander damage is already counted inside combat_dmg_dealt. Listing
+  # cmdr_dmg_dealt here would count those points twice and reward commander decks
+  # for nothing more than being commander decks.
+  #
+  # Non-combat damage is deliberately absent too: burn, drain and pingers do not
+  # count toward this tiebreaker. Note that many "drain" effects cause life LOSS
+  # rather than damage, which is not damage at all under the rules — so they were
+  # never fully captured anyway. See docs/DATA_MODEL.md for what a tracker should
+  # and should not count.
+  total_damage_fields:
+    - combat_dmg_dealt
+
+  # Players who play and score as normal but cannot win a prize: each prize
+  # they would have won goes to the next in line. Names as on the roster.
+  prize_ineligible: []
+
+roster:
+  - Alice
+  - Bob
+  - Carol
+  - Dave
+
+# Each prize resolves to a single winning player.
+#   metric : a stat field, or the special value "win_points"
+#   agg    : max | min   (who wins)
+#   scope  : night  -> sum the metric across a player's games, then agg
+#            peak   -> take a player's single best (max) game value, then agg across players
+#   tiebreak (optional): {field, direction, scope}  applied when the metric ties;
+#            scope is night or peak as above, and defaults to night. field may
+#            also be total_damage or win_points. Still tied: roster order.
+#            Every tiebreak below is the event owner's, from the 2026 notes.
+prizes:
+  - key: technical_winner
+    name: "Technical Winner"
+    metric: win_points
+    agg: max
+    scope: night
+    tiebreak: { field: total_damage, direction: max }
+
+  - key: blame_it_on_shuffling
+    name: "Blame It On Shuffling"
+    metric: win_points
+    agg: min
+    scope: night
+    tiebreak: { field: total_damage, direction: min }
+
+  - key: does_nobody_block
+    name: "Does Nobody Block?"
+    metric: combat_dmg_dealt
+    agg: max
+    scope: night
+    tiebreak: { field: creatures_attacked_with, direction: max }
+
+  - key: no_apologies
+    name: "No Apologies"
+    metric: biggest_attack_dealt
+    agg: max
+    scope: peak
+    tiebreak: { field: combat_dmg_dealt, direction: max }
+
+  - key: you_should_see_the_other_guy
+    name: "You Should See the Other Guy"
+    metric: biggest_attack_taken
+    agg: max
+    scope: peak
+    tiebreak: { field: combat_dmg_taken, direction: max }
+
+  - key: how_many_were_1_1s
+    name: "Yeah, But How Many Were 1/1s?"
+    metric: most_creatures_in_attack
+    agg: max
+    scope: peak
+    tiebreak: { field: combat_dmg_dealt, direction: max }
+
+  - key: cant_spell_million_without_mill
+    name: "Can't Spell Million Without Mill"
+    metric: total_graveyard
+    agg: max
+    scope: peak
+    tiebreak: { field: win_points, direction: max }
+
+  - key: twenty_one_less_than_forty
+    name: "21 Is Less Than 40"
+    metric: cmdr_dmg_dealt
+    agg: max
+    scope: night
+    tiebreak: { field: combat_dmg_dealt, direction: max }
+
+  - key: forty_more_than_twenty_one
+    name: "40 Is More Than 21"
+    metric: cmdr_dmg_dealt
+    agg: min
+    scope: night
+    tiebreak: { field: combat_dmg_dealt, direction: max }
+
+  - key: assassin_or_asshole
+    name: "Assassin or Asshole?"
+    metric: opps_eliminated
+    agg: max
+    scope: night
+    tiebreak: { field: combat_dmg_dealt, direction: max }
+
+  - key: scared_of_the_sword
+    name: "Scared of the Sword"
+    metric: noncombat_dmg_dealt
+    agg: max
+    scope: night
+    tiebreak: { field: combat_dmg_dealt, direction: min }

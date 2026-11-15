@@ -1,0 +1,130 @@
+{% macro error(field) %}
+  {% if errors.get(field) %}<span class="err">{{ errors[field] }}</span>{% endif %}
+{% endmacro %}
+
+{# Everybody a turn put out, in one submit.
+
+   Shown only while there are deaths outstanding -- eliminations credited on a
+   turn that nobody has been recorded against yet (_elimination_prompt) -- and
+   above the turn form, because for as long as it is here it is the thing to do
+   next. Recording the deaths is what removes it.
+
+   One row per death, in the order the players went out. The placement is not
+   asked for: it follows from the order and from how many were still playing,
+   so the tracker types two numbers per row instead of choosing a place that
+   another row might also claim. #}
+<form class="card eliminations{% if errors.get('eliminations') %} has-errors{% endif %}"
+      hx-post="{{ url_for('entry_eliminations').path }}"
+      hx-target="#entry-panel"
+      hx-swap="outerHTML"
+      hx-disabled-elt="find button">
+
+  <input type="hidden" name="pod" value="{{ pod }}">
+  <input type="hidden" name="match_no" value="{{ match_no }}">
+  {# Carried so the panel comes back on the round the tracker was working in. #}
+  <input type="hidden" name="round_no" value="{{ round_no }}">
+
+  <div class="card-head">
+    <h2>{% if deaths_due == 1 %}Who went out?{% else %}Who went out, in order?{% endif %}</h2>
+    <span class="badge warn">{{ deaths_due }} to record</span>
+  </div>
+
+  {{ error('eliminations') }}
+
+  {% for row in elimination_rows %}
+    {# What came back refused, so a bad digit in one box does not cost the
+       tracker the other eight. #}
+    {% set prior = elim.rows[loop.index0] if elim and elim.rows | length > loop.index0 else none %}
+    <fieldset class="elim-row">
+      <legend>{{ row.order }} out <small>finishes {{ row.label }}</small></legend>
+      <div class="grid">
+        <label class="field">
+          <span>Player</span>
+          <select name="player" aria-label="Who went out {{ row.order }}">
+            <option value="">— nobody yet</option>
+            {% for name in elimination_candidates %}
+              <option value="{{ name }}"
+                      {% if prior and prior.player == name %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Final life total</span>
+          {# No inputmode, like the single-player form: iOS's numeric keypad has
+             no minus key and life at death is usually negative. #}
+          <input type="number" name="final_life" step="1"
+                 value="{{ prior.final_life if prior else '' }}"
+                 aria-label="Life at death for the {{ row.order }} player out">
+          {{ error('elim_life_' ~ loop.index0) }}
+        </label>
+
+        <label class="field">
+          <span>Cards in graveyard</span>
+          <input type="number" name="total_graveyard" min="0" step="1" inputmode="numeric"
+                 value="{{ prior.total_graveyard if prior else '' }}"
+                 aria-label="Graveyard count for the {{ row.order }} player out">
+          {{ error('elim_yard_' ~ loop.index0) }}
+        </label>
+      </div>
+    </fieldset>
+  {% endfor %}
+
+  {% if elimination_rows | length > 1 %}
+    {# The usual case for two rows at once is one attack killing both, where
+       there is no order to list. The event owner's rule ranks those by life at
+       death, so ticking this derives the places from the numbers above
+       instead of from the order of the rows. #}
+    <label class="field check">
+      <input type="checkbox" name="simultaneous" value="1"
+             {% if elim and elim.simultaneous %}checked{% endif %}>
+      <span>All killed at the same moment</span>
+      <small>Then the order comes from the life totals above, least negative
+        higher. Equal totals tie and share the placement.</small>
+    </label>
+  {% endif %}
+
+  {% if winner_row %}
+    {% set prior = elim.winner if elim else none %}
+    {# These deaths leave one player standing, so the game is over and the
+       winner's own three numbers are due as well. Asked for here rather than
+       left for a tracker to come back to once the table has broken up. #}
+    <fieldset class="elim-row winner">
+      <legend>…and the winner <small>finishes {{ winner_row.label }}</small></legend>
+      <div class="grid">
+        <label class="field">
+          <span>Player</span>
+          <select name="winner" aria-label="Who won">
+            <option value="">— not yet</option>
+            {% for name in elimination_candidates %}
+              <option value="{{ name }}"
+                      {% if prior and prior.player == name %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Final life total</span>
+          <input type="number" name="winner_life" step="1"
+                 value="{{ prior.final_life if prior else '' }}"
+                 aria-label="Life total for the winner">
+          {{ error('winner_life') }}
+        </label>
+
+        <label class="field">
+          <span>Cards in graveyard</span>
+          <input type="number" name="winner_graveyard" min="0" step="1" inputmode="numeric"
+                 value="{{ prior.total_graveyard if prior else '' }}"
+                 aria-label="Graveyard count for the winner">
+          {{ error('winner_graveyard') }}
+        </label>
+      </div>
+    </fieldset>
+  {% endif %}
+
+  <div class="actions">
+    <button type="submit"><span class="idle">Save who went out</span><span class="busy">Saving…</span></button>
+    <span class="hint">Leave a row on “nobody yet” if you only know one of them
+      — it stays here until it is filled in.</span>
+  </div>
+</form>

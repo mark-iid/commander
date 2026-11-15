@@ -1,0 +1,337 @@
+/* Commander Tracker. Dark by default — trackers use this at a dim table, and the
+   display surface is projected. Touch-sized inputs; mobile-first single column. */
+
+:root {
+  --bg: #14161c;
+  --surface: #1c1f27;
+  --surface-2: #242833;
+  --line: #333846;
+  --text: #e8eaf0;
+  --muted: #969db0;
+  --accent: #7aa2ff;
+  --ok: #4ec98a;
+  --bad: #ff7b72;
+  --warn: #f0b85a;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main { max-width: 60rem; margin: 0 auto; padding: 1rem 1rem 4rem; }
+
+h1 { font-size: 1.4rem; margin: 0 0 1rem; }
+h2 { font-size: 1.05rem; margin: 0; }
+
+a { color: var(--accent); }
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.topbar .brand { font-weight: 600; }
+.topbar nav { display: flex; gap: 1rem; }
+
+/* --- selectors ---------------------------------------------------------- */
+
+#selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+#selectors label { flex: 1 1 8rem; }
+
+label { display: block; color: var(--muted); font-size: 0.85rem; }
+
+select, input[type="number"], input[type="text"] {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.5rem;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* --- cards -------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.card.has-errors { border-color: var(--bad); }
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.badge {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.badge.ok  { color: var(--ok);  border-color: var(--ok); }
+.badge.bad { color: var(--bad); border-color: var(--bad); }
+.badge.warn { color: var(--warn); border-color: var(--warn); }
+
+/* --- form --------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.field span { color: var(--text); font-size: 0.9rem; font-weight: 500; }
+.field small { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.75rem; }
+.field.dmg input { border-left: 3px solid var(--accent); }
+
+/* --- turn entry --------------------------------------------------------- */
+
+/* Whose turn, in the biggest type on the screen: misreading it is how a turn
+   gets saved against the wrong player. */
+.turn-head { align-items: flex-start; }
+.turn-head .whose { font-size: 1.5rem; line-height: 1.2; }
+.turn-head .whose small { font-size: 0.85rem; font-weight: 500; color: var(--bad); }
+.turn-head .where { color: var(--muted); font-size: 0.8rem; }
+
+/* Player, round and attackers on one row, then each fieldset one row of small
+   boxes. The numbers are one or two digits; full-width boxes stacked one per
+   line made the form two screens tall on a phone. */
+.turn-top { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); }
+/* Aligned from the top, so an error under one box does not lift that box out
+   of line with its neighbours. The labels in "rest of the turn" wrap to two
+   lines on a phone; reserving two lines everywhere keeps those boxes level. */
+.stat-row { grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); align-items: start; }
+.stat-row.rest .field > span:first-child { display: flex; align-items: flex-end; min-height: 2.7em; line-height: 1.35; }
+/* Opponent names can be long; one line each keeps the boxes in a row. */
+.field.dmg span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+fieldset > .legend-note { display: block; margin-top: 0.5rem; color: var(--muted); font-size: 0.75rem; }
+
+/* Proof the last save landed, at the top of the panel the page scrolls to. */
+.saved {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--ok);
+  background: var(--surface);
+  border: 1px solid var(--ok);
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+/* The button says so while its save is in flight (htmx marks the form, and
+   disables the button so a second tap cannot send it twice). Inside the
+   button rather than beside it, where a hidden label still took the width. */
+.busy { display: none; }
+.htmx-request .busy { display: inline; }
+.htmx-request .idle { display: none; }
+
+/* A request that did not land. Fixed at the bottom, where the thumb that just
+   tapped Save is, and loud, because the alternative was silence. */
+.request-failed {
+  position: fixed;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  color: #10131a;
+  background: var(--bad);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.request-failed[hidden] { display: none; }
+
+/* The death/win form sits below the turn form all game without being used.
+   Collapsed and muted until it matters, so it does not compete with Save. */
+.card.final { border-color: var(--line); }
+.card.final .card-head h2 { color: var(--muted); }
+details.final > summary { cursor: pointer; list-style: none; margin-bottom: 0; }
+details.final > summary::-webkit-details-marker { display: none; }
+details.final > summary h2::before { content: "\25B8\00a0"; }
+details.final[open] > summary { margin-bottom: 0.75rem; }
+details.final[open] > summary h2::before { content: "\25BE\00a0"; }
+
+/* The two once-per-match forms. Collapsed by default: both are set before play
+   and never touched again, and expanded they push the turn form off a phone. */
+details.reseat,
+details.decks-wrap { padding: 0.6rem 0.9rem; }
+details.reseat summary,
+details.decks-wrap summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+/* The inner form is already inside this card; drop its own frame. */
+details.reseat .card,
+details.decks-wrap .card { margin: 0.75rem 0 0; border: 0; padding: 0; }
+
+/* A turn nobody entered. Distinct from a turn entered as zero, which shows 0. */
+.turn-grid td.missing a { color: var(--muted); }
+/* Every cell opens its turn, so every cell is a full-size tap target. */
+.turn-grid td { padding: 0; }
+.turn-grid td a { display: block; min-width: 2.5rem; padding: 0.55rem 0.6rem; color: var(--text); text-decoration: none; }
+.turn-grid td.here a { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
+
+fieldset {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+legend { padding: 0 0.4rem; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.legend-note { text-transform: none; letter-spacing: 0; }
+
+.err { display: block; margin-top: 0.25rem; color: var(--bad); font-size: 0.75rem; }
+/* Inside a field, `.field span` would otherwise outrank this and paint the
+   error in the label's white, which read as more label rather than a problem. */
+.field .err { color: var(--bad); font-weight: 400; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+button {
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #10131a;
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+/* Destructive actions must not look like the primary one they sit beside. */
+button.danger { color: var(--bad); background: transparent; border: 1px solid var(--bad); }
+.hint, .empty { color: var(--muted); font-size: 0.85rem; }
+
+/* --- pod table ---------------------------------------------------------- */
+
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+th, td { padding: 0.45rem 0.6rem; text-align: left; border-bottom: 1px solid var(--line); }
+thead th { color: var(--muted); font-weight: 500; font-size: 0.75rem; }
+td.num, th.num { text-align: right; }
+tr.current th, tr.current td { background: var(--surface-2); }
+
+/* htmx sets this while a request is in flight */
+.htmx-request { opacity: 0.6; }
+
+/* Danger zone. Visually separated from the roster above it so a reset button is
+   never the thing your eye lands on while doing ordinary roster work. */
+.danger-zone { border-color: var(--bad); margin-top: 2.5rem; }
+.danger-zone h2 { color: var(--bad); }
+.danger-zone .confirm { border-left: 3px solid var(--bad); padding-left: 0.9rem; }
+.danger-zone .confirm-lead { font-weight: 700; color: var(--bad); margin-bottom: 0.5rem; }
+.danger-zone .confirm p { margin: 0.35rem 0; }
+.danger-zone .warn { color: var(--bad); }
+/* The confirm button needs its own <form> to carry the scope. .actions is a
+   flex row, so the form becomes the flex item — zero its margin and it lines up
+   with Cancel as if the button were a direct child. */
+.danger-zone .actions form { margin: 0; }
+
+/* --- mobile ------------------------------------------------------------- */
+/* Trackers work from their own phones at the table, so entry and admin have to
+   be usable on a 360px screen rather than merely reachable on one. The layout
+   above is already fluid — single-column main, auto-fit grids, wrapping flex
+   rows — so this block only fixes what fluidity alone cannot. */
+
+@media (max-width: 34rem) {
+  main { padding: 0.75rem 0.75rem 3rem; }
+  .topbar { padding: 0.6rem 0.75rem; }
+  .topbar nav { flex-wrap: wrap; }
+  /* Full-width primary action: the save button is the thing you reach for
+     one-handed, mid-game. */
+  .actions button { flex: 1 1 12rem; }
+
+  /* The roster is the one table here built from inputs rather than numbers, and
+     `white-space: nowrap` inside a horizontal scroller — right for the pod
+     table — makes it a two-handed job: scroll right, tap a field, scroll back
+     for Save. Stack each row into a labelled block instead. The column headings
+     are not lost, they move into the cells via data-label. */
+  .roster-table, .roster-table tbody, .roster-table tr, .roster-table td { display: block; }
+  .roster-table thead { display: none; }
+  /* Stacking removes the cell borders that separated players in the table, and
+     without a rule between blocks one player's Delete button reads as sitting
+     above the next player's name. */
+  .roster-table tr { padding: 0.6rem 0; border-bottom: 1px solid var(--line); }
+  .roster-table tr:last-child { border-bottom: 0; }
+  .roster-table td { padding: 0.2rem 0; border: 0; white-space: normal; }
+  .roster-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.15rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  /* Save and Delete share the width rather than stacking into two more rows. */
+  .roster-table td.row-actions { display: flex; gap: 0.5rem; padding-top: 0.5rem; }
+  .roster-table td.row-actions button { flex: 1 1 0; }
+}
+
+/* Sign-in over plain HTTP with Secure cookies on: the one case where a correct
+   passcode still bounces you back to the login page. Warn, don't style as an
+   error — nothing the operator typed is wrong. */
+.transport-warning {
+  border: 1px solid var(--bad);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+  background: var(--surface);
+  max-width: 46rem;
+}
+
+/* --- deaths outstanding -------------------------------------------------- */
+
+/* Above the turn form and bordered like a warning, because it is one: an
+   elimination has been credited that nobody has been recorded against, and
+   until it is, somebody's placement points do not exist. */
+.card.eliminations { border-color: var(--warn); }
+.card.eliminations .card-head h2 { font-size: 1.1rem; }
+.elim-row { margin: 0 0 0.75rem; }
+.elim-row:last-of-type { margin-bottom: 0; }
+/* The row is headed by its place in the order of elimination, because that is
+   what the tracker is being asked for; the placement it earns rides along in
+   smaller type as the consequence. */
+.elim-row > legend small { text-transform: none; letter-spacing: 0; color: var(--muted); }
+.elim-row.winner > legend { color: var(--ok); }
+
+/* A checkbox in a column of numeric boxes: laid out on one line so it does not
+   read as another field to fill in. */
+.field.check { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
+.field.check input { width: auto; min-height: 1.4rem; }
+.field.check small { flex-basis: 100%; margin-top: 0; }
+
+/* What the autosave has kept. Quiet when it worked -- it is confirmation, not
+   news -- and loud when it did not, because then the numbers in front of the
+   tracker are the only copy. */
+.draft-status { color: var(--muted); font-size: 0.8rem; }
+.draft-status.bad { color: var(--bad); font-weight: 600; }
