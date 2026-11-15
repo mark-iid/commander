@@ -35,10 +35,9 @@
     {
       "binding": "DB",
       "database_name": "commander-tracker",
-      // Filled in from the output of `wrangler d1 create commander-tracker`,
-      // run against the account this is meant to live on. Until then only
-      // --local works, which is what the tests use.
-      "database_id": "PLACEHOLDER",
+      // From `wrangler d1 create commander-tracker` on the Mystikos account.
+      // Not a secret: it names the database, it does not grant access to it.
+      "database_id": "6a571399-469e-4214-b52f-303ee1049e9e",
       "migrations_dir": "migrations"
     }
   ],
