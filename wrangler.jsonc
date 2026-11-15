@@ -35,9 +35,10 @@
     {
       "binding": "DB",
       "database_name": "commander-tracker",
-      // From `wrangler d1 create commander-tracker`. Not a secret: it names
-      // the database, it does not grant access to it.
-      "database_id": "1817333d-81b0-4964-96dd-1a1b97a2463e",
+      // Filled in from the output of `wrangler d1 create commander-tracker`,
+      // run against the account this is meant to live on. Until then only
+      // --local works, which is what the tests use.
+      "database_id": "PLACEHOLDER",
       "migrations_dir": "migrations"
     }
   ],
