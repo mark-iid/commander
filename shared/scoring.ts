@@ -96,6 +96,16 @@ export interface PrizeResult {
   value: number | null;
 }
 
+/** One player's line in a prize's full ranking. */
+export interface PrizeRankRow {
+  rank: number;
+  player: string;
+  value: number;
+  // The prize's tiebreak field for this player, or null if the prize has none.
+  tiebreak: number | null;
+  eligible: boolean;
+}
+
 export const SUMMABLE = [
   "combat_dmg_dealt",
   "noncombat_dmg_dealt",
@@ -236,14 +246,34 @@ export function resolvePrize(
   standings: PlayerStanding[],
   ineligible: readonly string[],
 ): PrizeResult {
-  const contenders = standings.filter(
-    (s) => s.games_played > 0 && !ineligible.includes(s.player),
-  );
-  if (contenders.length === 0) return { key: prize.key, name: prize.name, winner: null, value: null };
+  const winner = prizeRanking(prize, standings, ineligible).find((r) => r.eligible);
+  if (!winner) return { key: prize.key, name: prize.name, winner: null, value: null };
+  if (prize.agg === "max" && winner.value <= 0) {
+    return { key: prize.key, name: prize.name, winner: null, value: null };
+  }
+  return { key: prize.key, name: prize.name, winner: winner.player, value: winner.value };
+}
 
+/**
+ * Everyone who has played, in the order the prize ranks them.
+ *
+ * resolvePrize reads its winner off the front of this list, so the two cannot
+ * disagree. Ineligible players are ranked with everyone else and flagged rather
+ * than left out: the list answers "where did I come", and the prize goes to the
+ * first eligible row.
+ *
+ * Ranks are shared on a tie of both the metric and the tiebreak (1, 2, 2, 4).
+ * The prize itself still goes to the earlier of a fully tied pair in roster
+ * order, as resolvePrize documents.
+ */
+export function prizeRanking(
+  prize: Prize,
+  standings: PlayerStanding[],
+  ineligible: readonly string[],
+): PrizeRankRow[] {
   // For max we want the largest first, for min the smallest, so both can be
   // read off the front after sorting. Array.prototype.sort has been stable
-  // since ES2019, and contenders arrives in roster order, so a pair level on
+  // since ES2019, and standings arrives in roster order, so a pair level on
   // both keys keeps roster order -- the documented last resort.
   const keyOf = (st: PlayerStanding): [number, number] => {
     const primary = metricValue(st, prize);
@@ -255,17 +285,24 @@ export function resolvePrize(
     }
     return [primaryKey, tbKey];
   };
-  const winner = contenders.sort((a, b) => {
-    const [ap, at] = keyOf(a);
-    const [bp, bt] = keyOf(b);
-    return ap - bp || at - bt;
-  })[0]!;
+  const ordered = standings
+    .filter((s) => s.games_played > 0)
+    .map((st) => ({ st, key: keyOf(st) }))
+    .sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1]);
 
-  const value = metricValue(winner, prize);
-  if (prize.agg === "max" && value <= 0) {
-    return { key: prize.key, name: prize.name, winner: null, value: null };
-  }
-  return { key: prize.key, name: prize.name, winner: winner.player, value };
+  const rows: PrizeRankRow[] = [];
+  ordered.forEach(({ st, key }, i) => {
+    const prev = ordered[i - 1];
+    const tied = i > 0 && key[0] === prev!.key[0] && key[1] === prev!.key[1];
+    rows.push({
+      rank: tied ? rows[i - 1]!.rank : i + 1,
+      player: st.player,
+      value: metricValue(st, prize),
+      tiebreak: prize.tiebreak ? tiebreakValue(st, prize.tiebreak) : null,
+      eligible: !ineligible.includes(st.player),
+    });
+  });
+  return rows;
 }
 
 /**

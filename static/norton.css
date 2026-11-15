@@ -288,6 +288,57 @@ table { width: 100%; border-collapse: collapse; }
   font-size: 1rem;
 }
 
+/* --- prize ranking ------------------------------------------------------ */
+/* Each prize tile is a button that opens the prize's full ranking. */
+
+button.prize {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.prize:hover,
+button.prize:focus-visible { outline: 2px solid var(--nb-cyan); outline-offset: -2px; }
+
+#prize-detail:empty { display: none; }
+/* Above the CRT fade (1000) and the status bar (1001). */
+#prize-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 80px;
+  background: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.prize-detail {
+  width: min(64rem, 100%);
+  max-height: 100%;
+  overflow: auto;
+}
+.prize-detail .standings {
+  height: auto;
+  font-size: min(2.2rem, calc(70vh / (var(--rows, 4) * 1.6 + 2)));
+}
+/* The metric and tiebreak headings are full labels ("Tiebreak: Creatures
+   attacked with, night total"). Unwrapped they push the tiebreak column off
+   the panel. */
+.prize-detail .standings { width: 100%; }
+.prize-detail .standings thead th { white-space: normal; vertical-align: bottom; }
+.prize-detail .tag {
+  font-size: 0.55em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.prize-detail .hint {
+  color: var(--nb-dim);
+  font-size: 0.85rem;
+  padding: 4px 10px 0;
+  text-align: right;
+}
+
 /* --- status bar --------------------------------------------------------- */
 /* Solid cyan footer with bold black text, as the theme does it. */
 
@@ -345,4 +396,6 @@ body.sse-down .live { color: #990000; }
   /* minmax(15rem) still fits two columns on a large phone; one column keeps the
      prize names on fewer lines. */
   .prizes { grid-template-columns: 1fr; }
+  #prize-detail { padding: 12px; }
+  .prize-detail .standings { font-size: 1.2rem; }
 }

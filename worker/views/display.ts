@@ -1,13 +1,15 @@
 // The projected leaderboard. A standalone kiosk page: its own theme, no
-// navigation to click, and nothing client-side but a clock.
+// navigation, and nothing client-side but a clock and closing a prize's
+// ranking.
 //
 // hono/html tagged templates rather than JSX: these are HTML with HTMX
 // attributes on it. Interpolated values are escaped.
 
 import { html } from "hono/html";
 import type { Html } from "./html.ts";
-import type { PlayerStanding, PrizeResult } from "../../shared/scoring.ts";
+import type { PlayerStanding, Prize, PrizeRankRow, PrizeResult } from "../../shared/scoring.ts";
 import type { EventRow } from "../data.ts";
+import { GAME_STAT_FIELDS } from "../fields.ts";
 
 export interface BoardData {
   event: EventRow;
@@ -73,17 +75,93 @@ export function board({ standings, prizes, gamesRecorded }: BoardData): Html {
         ? html`<span class="empty">No prizes configured.</span>`
         : html`<div class="prizes">
             ${prizes.map(
-              (p) => html`<div class="prize nbi ${p.winner ? "" : "unclaimed"}">
+              (p) => html`<button
+                type="button"
+                class="prize nbi ${p.winner ? "" : "unclaimed"}"
+                hx-get="/display/prize/${encodeURIComponent(p.key)}"
+                hx-target="#prize-detail"
+                hx-swap="innerHTML"
+              >
                 <span class="name">${p.name}</span>
                 <span class="winner">${p.winner ?? "Unclaimed"}</span>
                 <span class="value">${p.winner ? p.value : html`&nbsp;`}</span>
-              </div>`,
+              </button>`,
             )}
           </div>`}
     </section>
 
   </div>
 </div>`;
+}
+
+export interface PrizeDetailData {
+  prize: Prize;
+  result: PrizeResult;
+  rows: PrizeRankRow[];
+}
+
+// Fields a prize or tiebreak can name that are not on the entry forms.
+const OTHER_LABELS: Record<string, string> = {
+  win_points: "Win points",
+  total_damage: "Total damage",
+  combat_dmg_taken: "Combat damage taken",
+  creatures_attacked_with: "Creatures attacked with",
+};
+
+function fieldLabel(field: string): string {
+  return GAME_STAT_FIELDS.find((f) => f.name === field)?.label ?? OTHER_LABELS[field] ?? field;
+}
+
+function scopeLabel(field: string, scope: "night" | "peak"): string {
+  if (field === "win_points" || field === "total_damage") return "";
+  return scope === "peak" ? ", best game" : ", night total";
+}
+
+/**
+ * One prize's full ranking, opened over the board by clicking the prize.
+ *
+ * Refreshes itself on every push (hx-trigger sse:leaderboard), so it does not
+ * go stale while it is open. Reuses the standings table's classes: the winner
+ * gets the leader bar, a player who takes no prize is dimmed and tagged.
+ */
+export function prizeDetail({ prize, result, rows }: PrizeDetailData): Html {
+  const tb = prize.tiebreak;
+  return html`<section
+  class="panel nb prize-detail"
+  hx-get="/display/prize/${encodeURIComponent(prize.key)}"
+  hx-trigger="sse:leaderboard"
+  hx-swap="outerHTML"
+>
+  <div class="ptitle">
+    <span>${prize.name}</span>
+    <span>${prize.agg === "max" ? "Highest" : "Lowest"} wins</span>
+  </div>
+  ${rows.length === 0
+    ? html`<span class="empty">Nobody has played yet.</span>`
+    : html`<table class="standings" style="--rows: ${rows.length}">
+        <thead>
+          <tr>
+            <th scope="col" class="rank">#</th>
+            <th scope="col">Player</th>
+            <th scope="col" class="pts">${fieldLabel(prize.metric)}${scopeLabel(prize.metric, prize.scope)}</th>
+            ${tb
+              ? html`<th scope="col" class="dmg">Tiebreak: ${fieldLabel(tb.field)}${scopeLabel(tb.field, tb.scope)}</th>`
+              : ""}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(
+            (r) => html`<tr class="${r.player === result.winner ? "leader" : r.eligible ? "" : "idle"}">
+              <td class="rank">${r.rank}</td>
+              <td class="name">${r.player}${r.eligible ? "" : html` <span class="tag">no prize</span>`}</td>
+              <td class="pts">${r.value}</td>
+              ${tb ? html`<td class="dmg">${r.tiebreak}</td>` : ""}
+            </tr>`,
+          )}
+        </tbody>
+      </table>`}
+  <div class="hint">${result.winner ? "" : "Unclaimed. "}Click or press Esc to close</div>
+</section>`;
 }
 
 export function displayPage(data: BoardData): Html {
@@ -112,6 +190,11 @@ export function displayPage(data: BoardData): Html {
 
   ${board(data)}
 
+  <!-- A prize's full ranking is fetched into here when the prize is clicked.
+       The prize buttons set hx-swap="innerHTML" explicitly: htmx attributes
+       inherit, and #board's outerHTML would replace this container itself. -->
+  <div id="prize-detail"></div>
+
   <footer id="foot">
     <span class="live" id="live">Connecting</span>
     <span>${event.name} &middot; Round-robin, ${event.games_per_player} games</span>
@@ -129,6 +212,13 @@ export function displayPage(data: BoardData): Html {
     }
     tick();
     setInterval(tick, 1000);
+
+    // Any click on an open ranking, or Escape, closes it.
+    const detail = document.getElementById("prize-detail");
+    detail.addEventListener("click", () => detail.replaceChildren());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") detail.replaceChildren();
+    });
 
     // Reflect the SSE connection in the status bar, so a dead projector feed is
     // visible in the room rather than silently frozen.

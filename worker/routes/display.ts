@@ -6,15 +6,16 @@
 //
 //   GET /display         the projected page
 //   GET /display/stream  SSE; emits a `leaderboard` event carrying the partial
+//   GET /display/prize/:key  one prize's full ranking, opened from the board
 //
 // The stream sends rendered HTML rather than JSON, because the scoring engine
 // already owns who is winning, so the browser needs no logic of its own.
 
 import { Hono } from "hono";
-import { buildStandings, rankedStandings, resolvePrize } from "../../shared/scoring.ts";
+import { buildStandings, prizeRanking, rankedStandings, resolvePrize } from "../../shared/scoring.ts";
 import { activeEvent, allStats, gamesRecorded, roster, scoringConfig } from "../data.ts";
 import { boardStub, renderBoard } from "../events.ts";
-import { type BoardData, displayPage } from "../views/display.ts";
+import { type BoardData, type PrizeDetailData, displayPage, prizeDetail } from "../views/display.ts";
 
 export const display = new Hono<{ Bindings: Env }>();
 
@@ -47,6 +48,27 @@ export async function boardData(db: D1Database, eventId: number): Promise<BoardD
   };
 }
 
+/** One prize's full ranking for an event, or null if the event has no such prize. */
+export async function prizeDetailData(
+  db: D1Database,
+  eventId: number,
+  key: string,
+): Promise<PrizeDetailData | null> {
+  const [names, config, stats] = await Promise.all([
+    roster(db, eventId),
+    scoringConfig(db, eventId),
+    allStats(db, eventId),
+  ]);
+  const prize = config.prizes.find((p) => p.key === key);
+  if (!prize) return null;
+  const standings = buildStandings(stats, config, names);
+  return {
+    prize,
+    result: resolvePrize(prize, standings, config.prize_ineligible),
+    rows: prizeRanking(prize, standings, config.prize_ineligible),
+  };
+}
+
 display.get("/", async (c) => {
   const event = await activeEvent(c.env.DB);
   if (!event) return c.text("No event configured yet.", 503);
@@ -73,4 +95,12 @@ display.get("/stream", async (c) => {
     method: "POST",
     body: html,
   });
+});
+
+display.get("/prize/:key", async (c) => {
+  const event = await activeEvent(c.env.DB);
+  if (!event) return c.text("No event configured yet.", 503);
+  const data = await prizeDetailData(c.env.DB, event.event_id, c.req.param("key"));
+  if (!data) return c.text("No such prize.", 404);
+  return c.html(prizeDetail(data));
 });

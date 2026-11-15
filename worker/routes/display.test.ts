@@ -7,7 +7,7 @@
 // HTML.
 
 import { env } from "cloudflare:test";
-import { beforeAll, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import app from "../index.ts";
 import { resetDatabase } from "../test/reset.ts";
 import { fixture, seedFixture } from "../test/seed.ts";
@@ -49,7 +49,7 @@ test("the ranks are the shared ones, not row numbers", () => {
 // silently matched nothing.
 function renderedPrizes(src: string): { name: string; winner: string; value: string }[] {
   const re =
-    /<div class="prize nbi[^"]*">\s*<span class="name">([^<]*)<\/span>\s*<span class="winner">([^<]*)<\/span>\s*<span class="value">([^<]*)<\/span>/g;
+    /<button\s+type="button"\s+class="prize nbi[^"]*"[^>]*>\s*<span class="name">([^<]*)<\/span>\s*<span class="winner">([^<]*)<\/span>\s*<span class="value">([^<]*)<\/span>/g;
   return [...src.matchAll(re)].map((m) => ({
     name: unescapeHtml(m[1]!),
     winner: unescapeHtml(m[2]!),
@@ -107,6 +107,78 @@ test("a name carrying markup is escaped, not rendered", async () => {
   const html = await res.text();
   expect(html).not.toContain("<script>alert(1)</script>");
   expect(html).toContain("&lt;script&gt;");
+});
+
+test("every prize opens its own ranking", () => {
+  for (const prize of fixture.prizes) {
+    expect(page, prize.key).toContain(`hx-get="/display/prize/${prize.key}"`);
+  }
+  // Explicit, because hx-swap inherits and #board says outerHTML: without it a
+  // click replaces #prize-detail instead of filling it, and the ranking lands
+  // in the page flow under the board.
+  const tiles = [...page.matchAll(/<button[^>]*class="prize nbi[^"]*"[^>]*>/g)].map((m) => m[0]);
+  expect(tiles.length).toBe(fixture.prizes.length);
+  for (const tile of tiles) expect(tile).toContain('hx-swap="innerHTML"');
+  expect(page).toContain('<div id="prize-detail"></div>');
+});
+
+// The rows of a prize's ranking: class, rank, name cell, value, tiebreak.
+function rankingRows(src: string): { cls: string; rank: number; name: string; value: string; tb: string }[] {
+  const re =
+    /<tr class="([^"]*)">\s*<td class="rank">(\d+)<\/td>\s*<td class="name">(.*?)<\/td>\s*<td class="pts">([^<]*)<\/td>\s*(?:<td class="dmg">([^<]*)<\/td>)?/gs;
+  return [...src.matchAll(re)].map((m) => ({
+    cls: m[1]!,
+    rank: Number(m[2]),
+    name: m[3]!.replace(/<[^>]*>/g, "").trim(),
+    value: m[4]!,
+    tb: m[5] ?? "",
+  }));
+}
+
+describe("a prize's ranking", () => {
+  beforeAll(async () => {
+    await resetDatabase(env.DB);
+    await seedFixture(env.DB);
+  });
+
+  test("lists everyone who played in the prize's order and marks the winner", async () => {
+    const res = await app.request("/display/prize/how_many_were_1_1s", {}, env);
+    expect(res.status).toBe(200);
+    const rows = rankingRows(await res.text());
+    expect(rows.map((r) => r.name)).toEqual([
+      "Alice no prize", "Bob", "Heidi", "Carol", "Erin", "Frank", "Grace", "Dave",
+    ]);
+    expect(rows.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5, 6, 6, 8]);
+    // The organiser came first and is dimmed; the prize is the runner-up's.
+    expect(rows[0]).toMatchObject({ cls: "idle", value: "10", tb: "45" });
+    expect(rows[1]).toMatchObject({ cls: "leader", value: "8", tb: "503" });
+    expect(rows.filter((r) => r.cls === "leader").length).toBe(1);
+  });
+
+  test("names the metric and the tiebreak", async () => {
+    const html = await (await app.request("/display/prize/does_nobody_block", {}, env)).text();
+    expect(html).toContain("Combat damage dealt, night total");
+    expect(html).toContain("Tiebreak: Creatures attacked with, night total");
+    expect(html).toContain("Highest wins");
+  });
+
+  test("refreshes itself on every push to the board", async () => {
+    const html = await (await app.request("/display/prize/technical_winner", {}, env)).text();
+    expect(html).toContain('hx-get="/display/prize/technical_winner"');
+    expect(html).toContain('hx-trigger="sse:leaderboard"');
+    expect(html).toContain('hx-swap="outerHTML"');
+  });
+
+  test("an unknown prize is a 404", async () => {
+    const res = await app.request("/display/prize/no_such_prize", {}, env);
+    expect(res.status).toBe(404);
+  });
+
+  test("is gated along with the board", async () => {
+    const res = await app.request("/display/prize/technical_winner", {}, { ...env, PROTECT_DISPLAY: "true" });
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toContain("/login");
+  });
 });
 
 test("an empty database says so instead of erroring", async () => {
