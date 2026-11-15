@@ -51,7 +51,9 @@ function sseReader(res: Response) {
     return pending.splice(0, want);
   }
 
-  return { frames, close: () => void reader.cancel() };
+  // Cancelling a reader on a stream that has already errored rejects, and an
+  // unhandled rejection fails the whole run.
+  return { frames, close: () => void reader.cancel().catch(() => {}) };
 }
 
 /** The HTML out of a `leaderboard` frame, with the SSE framing removed. */
@@ -115,7 +117,7 @@ describe("the stream", () => {
     expect(res.headers.get("cache-control")).toContain("no-cache");
     // Cloudflare's own buffering, and anything else that honours the header.
     expect(res.headers.get("x-accel-buffering")).toBe("no");
-    void res.body?.cancel();
+    void res.body?.cancel().catch(() => {});
   });
 
   test("a screen that connects between saves gets the current board", async () => {

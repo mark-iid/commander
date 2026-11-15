@@ -121,11 +121,13 @@ export class Board extends DurableObject<Env> {
 
   #drop(s: Subscriber): void {
     this.#subscribers.delete(s);
-    try {
-      void s.writer.close();
-    } catch {
-      // Already closed, which is why we are here.
-    }
+    // .catch, not try/catch: close() returns a promise, and the connection we
+    // are dropping is usually one that has already failed, so the close
+    // rejects. A try/catch only sees a synchronous throw, which left an
+    // unhandled rejection per dropped screen. Harmless in a browser, an error
+    // in the runtime's logs here, and enough to fail a vitest run -- which is
+    // how it was found, in CI rather than locally.
+    s.writer.close().catch(() => {});
     if (this.#subscribers.size === 0 && this.#ping !== null) {
       clearInterval(this.#ping);
       this.#ping = null;
