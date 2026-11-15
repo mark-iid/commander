@@ -19,18 +19,6 @@
   align-items: center;
   margin-bottom: 2rem;
 }
-/* An <a> that has to sit beside a <button> without looking like a link. */
-.button-link {
-  padding: 0.7rem 1.4rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  text-decoration: none;
-}
-.button-link:hover { border-color: var(--accent); }
 
 .sheet-section { margin-bottom: 2.5rem; }
 .sheet-section h2 {

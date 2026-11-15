@@ -13,11 +13,14 @@ database, not code.
 | Path | Auth | Purpose |
 |---|---|---|
 | `/entry` | passcode | Seat a table, record turns, record deaths and wins |
-| `/display` | open by default | Projected standings and prize board, live over SSE |
+| `/display` | open by default | Projected standings and prize board, live over SSE; click a prize for its full ranking |
 | `/results` | passcode | Printable results sheet |
 | `/results.csv` | passcode | One row per player per game |
 | `/results/turns.csv` | passcode | One row per player per turn, damage per opponent |
-| `/admin` | passcode | Roster, prize eligibility, reset |
+| `/admin` | passcode | Events, roster, prize eligibility, reset |
+
+`/entry`, `/display` and `/admin` work on the active event. The three results
+paths take `?event=<id>` for any event and default to the active one.
 
 ## Stack
 
@@ -36,8 +39,10 @@ cp .dev.vars.example .dev.vars               # set TRACKER_PASSCODE and SESSION_
 npx wrangler dev
 ```
 
-Every surface answers 503 until an event exists in the database. Create one at
-`/admin`, or insert an `events` row and an `active_event` pointer directly.
+Every surface, `/admin` included, answers 503 until an event exists in the
+database. The first one has to be inserted directly (the tables are listed
+under Configuring an event). After that, `/admin` creates new events by copying
+an existing one.
 
 The app refuses to serve `/entry`, `/admin` and `/results` while either secret
 is unset or still `change-me`.
@@ -62,6 +67,20 @@ against its recorded standings, prize winners and CSV exports.
 If `npm ci` leaves the Workers runtime uninstalled, it is the `allowScripts`
 entries in `package.json`: npm 11 blocks package install scripts unless they are
 listed, and a dependency bump re-blocks them.
+
+## Events
+
+Each tournament is an event. `/admin` lists them and can:
+
+- create one, copying pods, placement points, damage fields and prizes from an
+  existing event, and optionally its roster. Results are never copied.
+- rename one or set its date
+- make one active. The display reloads onto it.
+- delete one, after a confirmation that shows its counts. The active event
+  cannot be deleted. A D1 restore point is recorded first.
+
+There is no editor for prizes or scoring; a new event inherits them from the
+one it copies.
 
 ## Configuring an event
 
@@ -138,7 +157,7 @@ worker/
   data.ts         event, configuration and derived-stat reads
   entry-data.ts   seating, turns, deaths and wins
   entry-rules.ts  finishing order, outstanding deaths, who is next up
-  admin-data.ts   roster CRUD, result counts, resets
+  admin-data.ts   events, roster CRUD, result counts, resets
   board-do.ts     the Durable Object the SSE subscribers live in
   csv.ts          CSV writing and the export filenames
   routes/         one file per surface

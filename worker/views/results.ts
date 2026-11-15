@@ -106,8 +106,8 @@ export function resultsPage(d: ResultsData): Html {
   <!-- Screen only: on paper these are a button that cannot be pressed. -->
   <div class="sheet-actions">
     <button type="button" onclick="window.print()">Save as PDF</button>
-    <a class="button-link" href="/results.csv">Download CSV</a>
-    <a class="button-link" href="/results/turns.csv">Download turns CSV</a>
+    <a class="button-link" href="/results.csv?event=${d.event.event_id}">Download CSV</a>
+    <a class="button-link" href="/results/turns.csv?event=${d.event.event_id}">Download turns CSV</a>
     <span class="hint">Save as PDF opens your browser's print dialog &mdash; choose
     &ldquo;Save as PDF&rdquo; as the destination. The turns CSV has one row per player per
     turn, with damage broken out per opponent.</span>

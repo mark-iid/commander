@@ -323,3 +323,130 @@ async function seatOnly(): Promise<void> {
     .bind(game, await idOf("Cat"))
     .run();
 }
+
+// --- events --------------------------------------------------------------------
+
+const form = (fields: Record<string, string>) => new URLSearchParams(fields);
+const NEW_EVENT = { name: "Spring Night", date: "2027-03-14", copy_from: "1", copy_roster: "1", make_active: "1" };
+
+async function eventNames(): Promise<string[]> {
+  const { results } = await env.DB.prepare("SELECT name FROM events ORDER BY event_id").all<{ name: string }>();
+  return results.map((r) => r.name);
+}
+
+async function activeName(): Promise<string> {
+  const page = await (await get("/admin")).text();
+  return page.match(/<h2>Roster for ([^<]*)<\/h2>/)![1]!;
+}
+
+describe("events", () => {
+  test("the page lists the event as active and offers to copy it", async () => {
+    const page = await (await get("/admin")).text();
+    expect(page).toContain('<span class="badge ok">Active</span>');
+    expect(page).toContain('<option value="1" selected>Test Night</option>');
+    expect(page).toContain('href="/results?event=1"');
+    // No way to delete or re-activate the active event from its own row.
+    expect(page).not.toContain('hx-get="/admin/events/1/delete"');
+    expect(page).not.toContain('hx-post="/admin/events/1/activate"');
+  });
+
+  test("a new event copies the roster, becomes active and reloads the page", async () => {
+    const res = await post("/admin/events", form(NEW_EVENT));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("HX-Refresh")).toBe("true");
+    expect(await eventNames()).toEqual(["Test Night", "Spring Night"]);
+    expect(await activeName()).toBe("Spring Night");
+    const page = await (await get("/admin")).text();
+    for (const name of TABLE) expect(page).toContain(`value="${name}"`);
+    // The old event is still there, with its own row and actions.
+    expect(page).toContain('hx-post="/admin/events/1/activate"');
+  });
+
+  test("a new event can start empty and leave the active one alone", async () => {
+    const { copy_roster: _r, make_active: _a, ...quiet } = NEW_EVENT;
+    const res = await post("/admin/events", form(quiet));
+    expect(res.headers.get("HX-Refresh")).toBeNull();
+    expect(await res.text()).toContain("Created Spring Night.");
+    expect(await activeName()).toBe("Test Night");
+    const players = await env.DB.prepare("SELECT COUNT(*) AS n FROM players WHERE event_id = 2").first<{ n: number }>();
+    expect(players!.n).toBe(0);
+  });
+
+  test("a bad name or date creates nothing and keeps what was typed", async () => {
+    for (const [fields, message] of [
+      [{ ...NEW_EVENT, name: "" }, "Name is required."],
+      [{ ...NEW_EVENT, name: "Test Night" }, "An event named &#39;Test Night&#39; already exists."],
+      [{ ...NEW_EVENT, date: "2027-02-30" }, "Date must be a real date, or empty."],
+      [{ ...NEW_EVENT, copy_from: "99" }, "The event to copy from no longer exists."],
+    ] as const) {
+      const res = await post("/admin/events", form(fields));
+      expect(res.status, message).toBe(422);
+      const body = await res.text();
+      expect(body, message).toContain(message);
+      expect(body, message).toContain(`value="${fields.date}"`);
+    }
+    expect(await eventNames()).toEqual(["Test Night"]);
+  });
+
+  test("renaming an inactive event swaps the region; renaming the active one reloads", async () => {
+    const { make_active: _a, ...quiet } = NEW_EVENT;
+    await post("/admin/events", form(quiet));
+    const inactive = await post("/admin/events/2", form({ name: "Spring Fling", date: "" }));
+    expect(inactive.headers.get("HX-Refresh")).toBeNull();
+    expect(await inactive.text()).toContain("Saved Spring Fling.");
+    const active = await post("/admin/events/1", form({ name: "November 2026", date: "2026-11-14" }));
+    expect(active.headers.get("HX-Refresh")).toBe("true");
+    expect(await eventNames()).toEqual(["November 2026", "Spring Fling"]);
+    const clash = await post("/admin/events/2", form({ name: "November 2026", date: "" }));
+    expect(clash.status).toBe(422);
+  });
+
+  test("switching the active event reloads the page and moves every surface", async () => {
+    const { make_active: _a, ...quiet } = NEW_EVENT;
+    await post("/admin/events", form(quiet));
+    const res = await post("/admin/events/2/activate", form({}));
+    expect(res.headers.get("HX-Refresh")).toBe("true");
+    expect(await activeName()).toBe("Spring Night");
+    expect(await (await get("/display")).text()).toContain("<title>Spring Night - Leaderboard</title>");
+    expect((await post("/admin/events/99/activate", form({}))).status).toBe(422);
+  });
+
+  test("deleting asks first, with counts, then deletes only that event", async () => {
+    await post("/admin/events", form(NEW_EVENT)); // Spring Night is active now
+    await seedGame(1);
+    const armed = await get("/admin/events/1/delete");
+    const body = await armed.text();
+    expect(body).toContain("Delete Test Night?");
+    expect(body).toContain("<strong>1 game</strong>");
+    expect(body).toContain("<strong>1 stat row</strong>");
+    expect(body).toContain("<strong>4 players</strong>");
+    // Arming deleted nothing.
+    expect(await eventNames()).toEqual(["Test Night", "Spring Night"]);
+
+    const done = await post("/admin/events/1/delete", form({}));
+    expect(done.status).toBe(200);
+    expect(await done.text()).toContain("Deleted Test Night: 1 game, 4 players.");
+    expect(await eventNames()).toEqual(["Spring Night"]);
+    const left = await env.DB.prepare("SELECT COUNT(*) AS n FROM players").first<{ n: number }>();
+    expect(left!.n).toBe(4);
+  });
+
+  test("the active event cannot be armed or deleted", async () => {
+    const arm = await get("/admin/events/1/delete");
+    expect(arm.status).toBe(422);
+    expect(await arm.text()).toContain("Test Night is the active event.");
+    const res = await post("/admin/events/1/delete", form({}));
+    expect(res.status).toBe(422);
+    expect(await eventNames()).toEqual(["Test Night"]);
+  });
+
+  test("every event action is behind the passcode", async () => {
+    const res = await app.request(
+      "/admin/events",
+      { method: "POST", body: form(NEW_EVENT), headers: { "content-type": "application/x-www-form-urlencoded" } },
+      env,
+    );
+    expect(res.status).toBe(303);
+    expect(await eventNames()).toEqual(["Test Night"]);
+  });
+});

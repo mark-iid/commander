@@ -26,9 +26,9 @@ export interface BoardData {
  * first load and pushed verbatim on every save, so there is exactly one
  * definition of what the room sees.
  */
-export function board({ standings, prizes, gamesRecorded }: BoardData): Html {
+export function board({ event, standings, prizes, gamesRecorded }: BoardData): Html {
   const claimed = prizes.filter((p) => p.winner).length;
-  return html`<div id="board" sse-swap="leaderboard" hx-swap="outerHTML">
+  return html`<div id="board" sse-swap="leaderboard" hx-swap="outerHTML" data-event="${eventKey(event)}">
   <div id="main">
 
     <section class="panel nb">
@@ -164,6 +164,15 @@ export function prizeDetail({ prize, result, rows }: PrizeDetailData): Html {
 </section>`;
 }
 
+/**
+ * What the page header was rendered for. A pushed board only replaces #board,
+ * so when the active event changes or is renamed the header, title and footer
+ * are stale; the page compares this and reloads.
+ */
+function eventKey(event: EventRow): string {
+  return `${event.event_id}:${event.name}`;
+}
+
 export function displayPage(data: BoardData): Html {
   const { event } = data;
   return html`<!doctype html>
@@ -178,7 +187,7 @@ export function displayPage(data: BoardData): Html {
   <script src="/static/htmx.min.js"></script>
   <script src="/static/htmx-ext-sse.js" defer></script>
 </head>
-<body hx-ext="sse" sse-connect="/display/stream">
+<body hx-ext="sse" sse-connect="/display/stream" data-event="${eventKey(event)}">
 
   <header id="hdr">
     <span class="site-title">${event.name}</span>
@@ -212,6 +221,16 @@ export function displayPage(data: BoardData): Html {
     }
     tick();
     setInterval(tick, 1000);
+
+    // A board for a different event, or a renamed one, means everything
+    // outside #board is out of date. htmx:load, because the SSE extension
+    // reports its message on the board it just replaced, which is detached
+    // and bubbles nowhere.
+    document.body.addEventListener("htmx:load", (e) => {
+      if (e.target.id === "board" && e.target.dataset.event !== document.body.dataset.event) {
+        location.reload();
+      }
+    });
 
     // Any click on an open ranking, or Escape, closes it.
     const detail = document.getElementById("prize-detail");

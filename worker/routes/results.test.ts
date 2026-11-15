@@ -7,7 +7,7 @@
 // nobody notices until they read the sheet months later.
 
 import { env } from "cloudflare:test";
-import { beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import expectedResultsCsv from "../../shared/fixtures/fall-2026-results.csv?raw";
 import expectedTurnsCsv from "../../shared/fixtures/fall-2026-turns.csv?raw";
 import app from "../index.ts";
@@ -140,5 +140,51 @@ describe("the sheet", () => {
     // Put it back for anything that runs after.
     await resetDatabase(env.DB);
     await seedFixture(env.DB);
+  });
+});
+
+describe("an event other than the active one", () => {
+  let recorded: number;
+
+  beforeAll(async () => {
+    recorded = fixture.raw["events"]![0]!["event_id"] as number;
+    // A second, empty event made active, as starting a new tournament does.
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO events (event_id, name) VALUES (?, 'Next Night')").bind(recorded + 1),
+      env.DB.prepare("UPDATE active_event SET event_id = ?").bind(recorded + 1),
+    ]);
+  });
+
+  afterAll(async () => {
+    await env.DB.batch([
+      env.DB.prepare("UPDATE active_event SET event_id = ?").bind(recorded),
+      env.DB.prepare("DELETE FROM events WHERE event_id = ?").bind(recorded + 1),
+    ]);
+  });
+
+  test("the unqualified sheet is the active event's", async () => {
+    const page = await (await get("/results")).text();
+    expect(page).toContain("Next Night");
+    expect(page).not.toContain(fixture.roster[0]!);
+  });
+
+  test("?event= gives the recorded night's sheet and links its own exports", async () => {
+    const page = await (await get(`/results?event=${recorded}`)).text();
+    expect(page).toContain(fixture.raw["events"]![0]!["name"] as string);
+    for (const name of fixture.roster) expect(page, name).toContain(name);
+    expect(page).toContain(`href="/results.csv?event=${recorded}"`);
+    expect(page).toContain(`href="/results/turns.csv?event=${recorded}"`);
+  });
+
+  test("?event= on the exports is byte-identical to the recorded ones", async () => {
+    expect(await (await get(`/results.csv?event=${recorded}`)).text()).toBe(expectedResultsCsv);
+    expect(await (await get(`/results/turns.csv?event=${recorded}`)).text()).toBe(expectedTurnsCsv);
+  });
+
+  test("an event that does not exist is a 404", async () => {
+    for (const q of ["999", "abc", "", " 1", "1e0"]) {
+      expect((await get(`/results?event=${q}`)).status, q).toBe(404);
+      expect((await get(`/results.csv?event=${q}`)).status, q).toBe(404);
+    }
   });
 });

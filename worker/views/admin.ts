@@ -1,4 +1,8 @@
-// The admin surface: the roster, and the danger zone.
+// The admin surface: events, the roster, and the danger zone.
+//
+// Events are created by copying an existing one's pods, scoring and prizes, and
+// optionally its roster. Switching the active event reloads the page, because
+// every other region on it is about the event that was active.
 //
 // Prize eligibility is a checkbox per player, because it is a column rather
 // than a list of names in a config file: renaming a player cannot change it.
@@ -8,11 +12,23 @@
 
 import { html, raw } from "hono/html";
 import { COMMANDER_MAX } from "../fields.ts";
+import type { EventSummary } from "../admin-data.ts";
 import type { EventRow } from "../data.ts";
 import type { Html } from "./html.ts";
 import { layout } from "./layout.ts";
 
 export const NAME_MAX = 60;
+export const EVENT_NAME_MAX = 80;
+
+export interface EventsState {
+  events: EventSummary[];
+  /** The event awaiting delete confirmation, with what it holds. */
+  armed: (EventSummary & { stat_rows: number }) | null;
+  error: string | null;
+  notice: string | null;
+  /** What the operator typed on a failed create, so it is not blanked. */
+  form: { name: string; date: string };
+}
 
 export interface PlayerRow {
   player_id: number;
@@ -146,6 +162,127 @@ export function rosterSection(c: AdminContext, oob = false): Html {
 }
 
 /**
+ * The events region. Every event action swaps this one element, except a change
+ * of active event, which reloads the page.
+ */
+export function eventsSection(s: EventsState): Html {
+  const active = s.events.find((e) => e.active);
+  return html`<section id="events" class="card${s.error ? " has-errors" : ""}">
+
+  <div class="card-head">
+    <h2>Events</h2>
+    ${s.error
+      ? html`<span class="badge bad">${s.error}</span>`
+      : s.notice
+        ? html`<span class="badge ok">${s.notice}</span>`
+        : html`<span class="badge">${plural(s.events.length, "event")}</span>`}
+  </div>
+
+  ${s.armed
+    ? html`<div class="confirm">
+      <p class="confirm-lead">Delete ${s.armed.name}?</p>
+      <p>This permanently deletes the event with
+        <strong>${plural(s.armed.games, "game")}</strong>,
+        <strong>${plural(s.armed.stat_rows, "stat row")}</strong> and
+        <strong>${plural(s.armed.players, "player")}</strong>, its prizes and its scoring.
+        No other event is touched.</p>
+      <p class="hint">A restore point is recorded first, and named in the result.</p>
+      <div class="actions">
+        <form hx-post="/admin/events/${s.armed.event_id}/delete" hx-target="#events" hx-swap="outerHTML">
+          <button type="submit" class="danger">Yes, delete ${s.armed.name}</button>
+        </form>
+        <button type="button" hx-get="/admin/events" hx-target="#events" hx-swap="outerHTML">Cancel</button>
+      </div>
+    </div>`
+    : ""}
+
+  <div class="table-scroll">
+    <table class="roster-table">
+      <thead>
+        <tr><th>Name</th><th>Date</th><th>Recorded</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        ${s.events.map(
+          (e) => html`<tr>
+            <td data-label="Name">
+              <input type="text" name="name" maxlength="${EVENT_NAME_MAX}"
+                     value="${e.name}" aria-label="Name for ${e.name}">
+            </td>
+            <td data-label="Date">
+              <input type="date" name="date" value="${e.date ?? ""}" aria-label="Date for ${e.name}">
+            </td>
+            <td data-label="Recorded">
+              ${plural(e.games, "game")} &middot; ${plural(e.players, "player")}
+              ${e.active ? html`<span class="badge ok">Active</span>` : ""}
+            </td>
+            <td class="row-actions">
+              <button type="button"
+                      hx-post="/admin/events/${e.event_id}"
+                      hx-include="closest tr"
+                      hx-target="#events"
+                      hx-swap="outerHTML">Save</button>
+              <a class="button-link" href="/results?event=${e.event_id}">Results</a>
+              ${e.active
+                ? ""
+                : html`<button type="button"
+                        hx-post="/admin/events/${e.event_id}/activate"
+                        hx-target="#events"
+                        hx-swap="outerHTML">Make active</button>
+                  <button type="button" class="danger"
+                        hx-get="/admin/events/${e.event_id}/delete"
+                        hx-target="#events"
+                        hx-swap="outerHTML">Delete</button>`}
+            </td>
+          </tr>`,
+        )}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">The active event is the one on the display, at /entry and on this page.
+  The active event cannot be deleted.</p>
+
+  <form hx-post="/admin/events" hx-target="#events" hx-swap="outerHTML">
+    <fieldset>
+      <legend>New event</legend>
+      <div class="grid">
+        <label class="field">
+          <span>Name</span>
+          <input type="text" name="name" maxlength="${EVENT_NAME_MAX}" value="${s.form.name}">
+        </label>
+        <label class="field">
+          <span>Date</span>
+          <input type="date" name="date" value="${s.form.date}">
+          <small>Optional.</small>
+        </label>
+        <label class="field">
+          <span>Copy prizes, scoring and pods from</span>
+          <select name="copy_from">
+            ${s.events.map(
+              (e) => html`<option value="${e.event_id}"${e === active ? raw(" selected") : ""}>${e.name}</option>`,
+            )}
+          </select>
+          <small>Results are never copied.</small>
+        </label>
+        <label class="field check">
+          <input type="checkbox" name="copy_roster" value="1" checked>
+          <span>Copy its roster</span>
+          <small>Players, commanders and prize eligibility. Untick to start with nobody.</small>
+        </label>
+        <label class="field check">
+          <input type="checkbox" name="make_active" value="1" checked>
+          <span>Make it the active event</span>
+        </label>
+      </div>
+      <div class="actions">
+        <button type="submit">Create event</button>
+      </div>
+    </fieldset>
+  </form>
+
+</section>`;
+}
+
+/**
  * The danger zone, in one of two states. `armed` is the scope awaiting
  * confirmation; when it is unset this is just the two buttons.
  *
@@ -205,9 +342,10 @@ export function dangerZone(c: ResetState): Html {
                 hx-swap="outerHTML">Cancel</button>
       </div>
     </div>`
-    : html`<p class="hint">Resets are for between events, or after a rehearsal. Both record a
-      restore point first and both are safe to run while trackers are connected, but
-      neither can be undone from this page.</p>
+    : html`<p class="hint">These clear the active event. To start a new tournament, create a new
+      event above instead, which keeps this one's results. Both resets record a restore point
+      first and are safe to run while trackers are connected, but neither can be undone from
+      this page.</p>
 
     <div class="actions">
       <button type="button" class="danger"
@@ -236,12 +374,15 @@ export function resetDone(c: AdminContext): Html {
   return html`${dangerZone(c)}${rosterSection(c, true)}`;
 }
 
-export function adminPage(c: AdminContext): Html {
+export function adminPage(c: AdminContext, events: EventsState): Html {
   return layout(
-    html`<h1>Roster</h1>
-<p class="hint">The roster lives in the database and this page owns it. Untick
-<strong>Eligible</strong> for the organiser: they play and score, and each prize they
-would have won goes to the runner-up.</p>
+    html`<h1>Admin</h1>
+
+${eventsSection(events)}
+
+<h2>Roster for ${c.event.name}</h2>
+<p class="hint">Untick <strong>Eligible</strong> for the organiser: they play and score,
+and each prize they would have won goes to the runner-up.</p>
 
 ${rosterSection(c)}
 

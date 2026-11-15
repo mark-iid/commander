@@ -6,6 +6,9 @@
 //                           opponent: the event owner's own tracking sheet,
 //                           filled in
 //
+// All three take ?event=<id> for any event, past ones included, and otherwise
+// describe the active one.
+//
 // All three describe whatever has been recorded so far rather than waiting for
 // a complete event, so the same URL is a mid-event snapshot after round one and
 // the final results after round three. The header says which it is; a sheet
@@ -17,6 +20,7 @@
 // because the matcher respects segment boundaries.
 
 import { Hono } from "hono";
+import type { Context } from "hono";
 import {
   buildStandings,
   rankedStandings,
@@ -32,14 +36,27 @@ import {
   allTurns,
   damageMatrix,
   deckKey,
+  type EventRow,
   games,
+  getEvent,
   roster,
   scoringConfig,
 } from "../data.ts";
 import { GAME_STAT_FIELDS, TURN_FIELDS } from "../fields.ts";
+import { idOf } from "../ids.ts";
 import { type Matrix, type ResultsData, type Section, resultsPage } from "../views/results.ts";
 
 export const results = new Hono<{ Bindings: Env }>();
+
+/** The event named by ?event=, or the active one; a response if there is none. */
+async function requestedEvent(c: Context<{ Bindings: Env }>): Promise<EventRow | Response> {
+  const raw = c.req.query("event");
+  if (raw === undefined) {
+    return (await activeEvent(c.env.DB)) ?? c.text("No event configured yet.", 503);
+  }
+  const id = idOf(raw);
+  return (id === null ? null : await getEvent(c.env.DB, id)) ?? c.text("No such event.", 404);
+}
 
 const stat = (s: GamePlayerStat, name: string): number =>
   (s as unknown as Record<string, number>)[name] ?? 0;
@@ -91,8 +108,8 @@ async function resultsData(db: D1Database, event: Awaited<ReturnType<typeof acti
 }
 
 results.get("/results", async (c) => {
-  const event = await activeEvent(c.env.DB);
-  if (!event) return c.text("No event configured yet.", 503);
+  const event = await requestedEvent(c);
+  if (event instanceof Response) return event;
   const { names, config, stats, gameRows, seats, matrices, decks } = await resultsData(
     c.env.DB,
     event,
@@ -174,8 +191,8 @@ const CSV_HEADER = [
 ];
 
 results.get("/results.csv", async (c) => {
-  const event = await activeEvent(c.env.DB);
-  if (!event) return c.text("No event configured yet.", 503);
+  const event = await requestedEvent(c);
+  if (event instanceof Response) return event;
   const eventId = event.event_id;
   const [stats, gameRows, decks] = await Promise.all([
     allStats(c.env.DB, eventId),
@@ -220,8 +237,8 @@ results.get("/results/turns.csv", async (c) => {
   // spreadsheet without a pivot. A cell is blank when that player was not at
   // the table for the match, and 0 when they were and took nothing, which is a
   // distinction a single zero would lose.
-  const event = await activeEvent(c.env.DB);
-  if (!event) return c.text("No event configured yet.", 503);
+  const event = await requestedEvent(c);
+  if (event instanceof Response) return event;
   const eventId = event.event_id;
   const [turns, gameRows, names, seats] = await Promise.all([
     allTurns(c.env.DB, eventId),

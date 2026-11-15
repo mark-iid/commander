@@ -1,6 +1,8 @@
 // Reads and writes for the admin surface.
 //
-// Roster CRUD, result counts, and the two reset levels.
+// Events, roster CRUD, result counts, and the two reset levels.
+
+import { ACTIVE_EVENT_ID, type EventRow } from "./data.ts";
 
 /** A player is part of a game if any of this is true. */
 const PLAYER_IN_A_GAME = `
@@ -219,4 +221,157 @@ export async function restorePoint(db: D1Database): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// --- events ------------------------------------------------------------------
+
+export interface EventSummary extends EventRow {
+  games: number;
+  players: number;
+  active: boolean;
+}
+
+/** Every event, newest first, with what is recorded in it and which is active. */
+export async function eventSummaries(db: D1Database): Promise<EventSummary[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT e.*,
+         (SELECT COUNT(*) FROM games   g WHERE g.event_id = e.event_id) AS games,
+         (SELECT COUNT(*) FROM players p WHERE p.event_id = e.event_id) AS players,
+         e.event_id IS (${ACTIVE_EVENT_ID}) AS active
+       FROM events e
+       ORDER BY e.created_at DESC, e.event_id DESC`,
+    )
+    .all<EventRow & { games: number; players: number; active: number }>();
+  return results.map((r) => ({ ...r, active: r.active === 1 }));
+}
+
+export interface NewEvent {
+  name: string;
+  date: string | null;
+  /** The event whose pods, scoring and prizes are copied. */
+  copyFrom: number;
+  copyRoster: boolean;
+  makeActive: boolean;
+}
+
+/**
+ * Create an event from an existing one's configuration. Returns the new id, or
+ * null if the source event does not exist.
+ *
+ * Copying is the only way to configure one: there is no prize editor, and an
+ * event with no prizes, pods or placement points cannot be played. Results are
+ * never copied. The roster is optional; copied players keep their commander,
+ * eligibility and roster order, and are new rows, so nothing recorded in the
+ * new event touches the old one.
+ *
+ * The id is chosen up front so every statement in the batch can name it. Two
+ * admins creating at once collide on the primary key and the second batch
+ * fails whole, which is the right outcome.
+ */
+export async function createEvent(db: D1Database, ev: NewEvent): Promise<number | null> {
+  const source = await db
+    .prepare("SELECT event_id FROM events WHERE event_id = ?")
+    .bind(ev.copyFrom)
+    .first<{ event_id: number }>();
+  if (!source) return null;
+  const next = await db
+    .prepare("SELECT COALESCE(MAX(event_id), 0) + 1 AS id FROM events")
+    .first<{ id: number }>();
+  const id = next!.id;
+  const from = ev.copyFrom;
+
+  const statements = [
+    db
+      .prepare(
+        `INSERT INTO events (event_id, name, date, games_per_player, pod_size)
+         SELECT ?, ?, ?, games_per_player, pod_size FROM events WHERE event_id = ?`,
+      )
+      .bind(id, ev.name, ev.date, from),
+    db
+      .prepare("INSERT INTO pods (event_id, label, position) SELECT ?, label, position FROM pods WHERE event_id = ?")
+      .bind(id, from),
+    db
+      .prepare(
+        `INSERT INTO placement_points (event_id, placement, points)
+         SELECT ?, placement, points FROM placement_points WHERE event_id = ?`,
+      )
+      .bind(id, from),
+    db
+      .prepare(
+        `INSERT INTO total_damage_fields (event_id, field, position)
+         SELECT ?, field, position FROM total_damage_fields WHERE event_id = ?`,
+      )
+      .bind(id, from),
+    db
+      .prepare(
+        `INSERT INTO prizes (event_id, key, name, metric, agg, scope,
+                             tiebreak_field, tiebreak_direction, tiebreak_scope, position)
+         SELECT ?, key, name, metric, agg, scope,
+                tiebreak_field, tiebreak_direction, tiebreak_scope, position
+         FROM prizes WHERE event_id = ?`,
+      )
+      .bind(id, from),
+  ];
+  if (ev.copyRoster) {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO players (event_id, name, commander, prize_eligible, roster_position)
+           SELECT ?, name, commander, prize_eligible, roster_position FROM players WHERE event_id = ?`,
+        )
+        .bind(id, from),
+    );
+  }
+  if (ev.makeActive) statements.push(activateStatement(db, id));
+  await db.batch(statements);
+  return id;
+}
+
+function activateStatement(db: D1Database, eventId: number): D1PreparedStatement {
+  // The WHERE is what makes an unknown id change nothing. It is also required
+  // by SQLite's grammar here: an upsert's SELECT needs one to be parsed.
+  return db
+    .prepare(
+      `INSERT INTO active_event (singleton, event_id)
+       SELECT 1, event_id FROM events WHERE event_id = ?
+       ON CONFLICT (singleton) DO UPDATE SET event_id = excluded.event_id`,
+    )
+    .bind(eventId);
+}
+
+/** Point the unqualified surfaces at this event. False if there is no such event. */
+export async function activateEvent(db: D1Database, eventId: number): Promise<boolean> {
+  const result = await activateStatement(db, eventId).run();
+  return (result.meta.changes ?? 0) > 0;
+}
+
+/** Rename an event or change its date. False if there is no such event. */
+export async function updateEvent(
+  db: D1Database,
+  eventId: number,
+  name: string,
+  date: string | null,
+): Promise<boolean> {
+  const result = await db
+    .prepare("UPDATE events SET name = ?, date = ? WHERE event_id = ?")
+    .bind(name, date, eventId)
+    .run();
+  return (result.meta.changes ?? 0) > 0;
+}
+
+/**
+ * Delete an event and everything in it. False if nothing was deleted.
+ *
+ * Refuses the active event in the statement itself, not only in the route:
+ * deleting it would leave the projector and every tracker on whatever event
+ * the fallback picks next, mid-night. Everything else goes by cascade, so the
+ * caller counts first if it wants to say what was destroyed.
+ */
+export async function deleteEvent(db: D1Database, eventId: number): Promise<boolean> {
+  const result = await db
+    .prepare(`DELETE FROM events WHERE event_id = ? AND event_id IS NOT (${ACTIVE_EVENT_ID})`)
+    .bind(eventId)
+    .run();
+  return (result.meta.changes ?? 0) > 0;
 }

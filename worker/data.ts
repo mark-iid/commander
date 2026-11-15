@@ -33,15 +33,20 @@ export interface EventRow {
  */
 export async function activeEvent(db: D1Database): Promise<EventRow | null> {
   return await db
-    .prepare(
-      `SELECT e.* FROM events e
+    .prepare(`SELECT * FROM events WHERE event_id = (${ACTIVE_EVENT_ID})`)
+    .first<EventRow>();
+}
+
+/**
+ * activeEvent's choice as a scalar subquery. Exported so a statement that must
+ * not touch the active event (deleteEvent) can hold that rule itself, rather
+ * than trusting a check made before it ran.
+ */
+export const ACTIVE_EVENT_ID = `SELECT e.event_id FROM events e
        LEFT JOIN active_event a ON a.event_id = e.event_id
        WHERE e.archived_at IS NULL OR a.event_id IS NOT NULL
        ORDER BY a.event_id IS NULL, e.created_at DESC, e.event_id DESC
-       LIMIT 1`,
-    )
-    .first<EventRow>();
-}
+       LIMIT 1`;
 
 export async function getEvent(db: D1Database, eventId: number): Promise<EventRow | null> {
   return await db.prepare("SELECT * FROM events WHERE event_id = ?").bind(eventId).first<EventRow>();

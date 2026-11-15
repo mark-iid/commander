@@ -87,6 +87,14 @@ test("the organiser is in the standings and on no prize", () => {
   expect(prizes).not.toContain(`<span class="winner">${name}</span>`);
 });
 
+test("the page and the board carry the same event key", () => {
+  // The page reloads when a pushed board's key differs from the one it was
+  // rendered with: a switched or renamed event leaves the header stale.
+  const event = fixture.raw["events"]![0]!;
+  const key = `data-event="${event["event_id"]}:${event["name"]}"`;
+  expect(page.match(new RegExp(key, "g"))?.length).toBe(2);
+});
+
 test("the board counts the games that have anything recorded", () => {
   expect(page).toContain("6 games");
 });
