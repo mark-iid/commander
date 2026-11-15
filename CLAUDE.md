@@ -52,14 +52,18 @@ After writing a test, break the code and check the test notices.
 
 ## Deployment
 
-Workers Builds on a push to `main`. Cloudflare resources are on the Mystikos
+Serves at `mtg.earnestdesigns.com`. Cloudflare resources are on the Mystikos
 account, not the default one wrangler may be logged into; run
 `npx wrangler whoami` and confirm before creating anything.
+
+`TRACKER_PASSCODE` and `SESSION_SECRET` are secrets, and `wrangler secret put`
+reads them from a hidden TTY prompt. Run it from a real terminal: in a
+non-interactive shell it reads nothing, stores an empty string, and still
+reports success. The guard in `worker/auth.ts` then answers 503 on every
+passcode-gated surface, which is how to tell.
 
 ## Known gaps
 
 - No offline fallback. The app needs a network, which a venue may not have.
-- `mtg.earnestdesigns.com` is configured as the custom domain. As of 2026-11-15
-  the Workers custom domain is attached and the dashboard shows a Worker DNS
-  record, but the authoritative nameservers serve no address for it, so the
-  hostname does not resolve. The app itself is deployed and serving.
+- Workers Builds is not connected to the GitHub repository yet, so a push to
+  `main` does not deploy. Until it is, `npx wrangler deploy` is the only path.
