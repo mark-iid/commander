@@ -1,12 +1,9 @@
-// The entry rules, held to Python's answers case for case.
+// The entry rules, held to recorded answers case for case.
 //
-// shared/fixtures/entry-rules.json is app/routes/entry.py's own output over 61
-// cases, captured by scripts/entry_rules_fixture.py and kept honest by
-// tests/test_entry_rules_fixture.py. These are the rules the event owner
-// settled, and all of them fail silently: a wrong placement, a death prompt
-// that never appears, a tracker landing on a turn already saved. None of that
-// raises anything, so the only way to know the port agrees is to ask it the
-// same questions.
+// shared/fixtures/entry-rules.json holds 61 recorded cases. These rules fail
+// silently when wrong: a wrong placement, a death prompt that never appears, a
+// tracker landing on a turn already saved. Nothing raises, so the only check is
+// to ask the same questions and compare.
 
 import { describe, expect, test } from "vitest";
 import { entryRules as fixture } from "../shared/fixtures/entry-rules.ts";

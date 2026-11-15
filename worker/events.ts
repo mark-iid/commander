@@ -1,15 +1,11 @@
 // Telling the projected board that something changed.
 //
-// The one place every write path calls. app/events.py was an in-process
-// broadcaster; the fan-out now lives in a Durable Object (worker/board-do.ts)
-// because Workers isolates do not share memory.
+// The one place every write path calls. The fan-out lives in a Durable Object
+// (worker/board-do.ts) because Workers isolates do not share memory.
 //
-// The payload is the rendered board rather than a signal, which is a change
-// from the Python. There, the publish was a bare "stats-updated" and each
-// subscriber's generator re-rendered from storage, which cost one render per
-// screen per save. Here one render serves the room, and it is the same function
-// the page itself is built from, so there is still exactly one definition of
-// what the room sees.
+// The payload is the rendered board rather than a signal, so one render serves
+// every screen, and it is the same function the page is built from: one
+// definition of what the room sees.
 
 import type { Context } from "hono";
 import { activeEvent } from "./data.ts";

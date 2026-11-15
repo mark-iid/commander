@@ -1,4 +1,4 @@
-// The rules the entry surface decides by, ported from app/routes/entry.py.
+// The rules the entry surface decides by.
 //
 // Pure functions, kept apart from the routes because this is where the event
 // owner's settled rules live and every one of them fails silently when it is
@@ -6,8 +6,8 @@
 // appears, a tracker landing on a turn that is already saved. None of those
 // raise anything.
 //
-// Held to Python's own answers over 61 cases in shared/fixtures/entry-rules.json
-// (worker/entry-rules.test.ts), captured by scripts/entry_rules_fixture.py.
+// Held to recorded answers over 61 cases in shared/fixtures/entry-rules.json
+// (worker/entry-rules.test.ts).
 
 /** Cap on a round number. A game is turns, not hours, but the box is typed. */
 export const MAX_ROUNDS = 99;
@@ -30,10 +30,7 @@ export function ordinal(n: number): string {
 /**
  * "1st — 4 pts".
  *
- * The dash is an em dash because that is what the FastAPI app put on the
- * screen, and this label is compared against Python's output case for case
- * while both exist. Worth changing once the Python app is deleted, not during
- * a port.
+ * Rendered on the placement select and in the elimination form's legends.
  */
 export function placementLabel(place: number, points: number): string {
   return `${ordinal(place)} — ${points} pt${points === 1 ? "" : "s"}`;

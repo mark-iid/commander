@@ -30,7 +30,7 @@ test("the board names the event and every player on the roster", () => {
 
 test("the standings are in the order the engine put them", () => {
   // Pull the player names out of the standings table in document order and
-  // compare against what Python computed for this night.
+  // compare against the recorded result for this event.
   const table = page.slice(page.indexOf('class="standings"'), page.indexOf("</table>"));
   const rendered = [...table.matchAll(/<td class="name">([^<]*)<\/td>/g)].map((m) => m[1]);
   expect(rendered).toEqual(fixture.expected.ranked.map(([, player]) => player));

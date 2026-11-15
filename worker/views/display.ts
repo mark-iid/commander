@@ -1,10 +1,8 @@
 // The projected leaderboard. A standalone kiosk page: its own theme, no
 // navigation to click, and nothing client-side but a clock.
 //
-// Ported from app/templates/display/index.html and display/_board.html with
-// hono/html rather than JSX, because these were already HTML with HTMX
-// attributes on it and a tagged template is a near-literal port. Interpolated
-// values are escaped, the same as Jinja's autoescape.
+// hono/html tagged templates rather than JSX: these are HTML with HTMX
+// attributes on it. Interpolated values are escaped.
 
 import { html } from "hono/html";
 import type { Html } from "./html.ts";

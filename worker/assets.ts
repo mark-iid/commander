@@ -18,12 +18,10 @@
 /**
  * Where an asset lives inside the assets directory.
  *
- * The templates ask for /static/app.css, which is where FastAPI mounted them
- * and what every page and every cached page already references. The binding
- * serves files relative to its own root, so app/static/app.css is /app.css to
- * it. Forwarding the request untouched returned 404 for every asset on every
- * page, which is how this was found; it is a function so that it can be tested
- * without an asset server.
+ * Pages reference /static/*. The binding serves files relative to its own
+ * root, so static/app.css is /app.css to it, and forwarding the request
+ * untouched returns 404 for every asset on every page. A function so it can be
+ * tested without an asset server.
  */
 export function assetPath(pathname: string): string {
   return pathname.startsWith("/static/") ? pathname.slice("/static".length) : pathname;

@@ -1,9 +1,8 @@
 // The shell every surface but the projected board sits in.
 //
-// Ported from app/templates/base.html. The HTMX configuration and the failed
-// request banner come across verbatim, because they are about the venue's wifi
-// rather than about the server: a save that did not land has to say so, and
-// htmx shows nothing by default for a dropped connection.
+// The HTMX configuration and the failed-request banner are about the venue's
+// wifi rather than the server: a save that did not land has to say so, and htmx
+// shows nothing by default for a dropped connection.
 //
 // The content hash on asset URLs is gone; worker/assets.ts has what replaced
 // it, what was verified and how.

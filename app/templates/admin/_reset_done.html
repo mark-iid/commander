@@ -1,6 +1,0 @@
-{# Response to a completed reset. The danger zone is the swap target; the roster
-   rides along out-of-band because a scope=all reset replaced every row in it,
-   and even a results-only reset changes what the roster can do — players who
-   were undeletable because they had stats are now deletable. #}
-{% include "admin/_reset.html" %}
-{% with oob = true %}{% include "admin/_roster.html" %}{% endwith %}

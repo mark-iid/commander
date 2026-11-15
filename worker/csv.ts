@@ -1,4 +1,4 @@
-// CSV writing, to the same rules Python's csv.writer follows.
+// CSV writing: RFC 4180 with QUOTE_MINIMAL quoting and CRLF line endings.
 //
 // Hand-rolled because the exports have to stay readable in a spreadsheet and
 // the data is free text people typed: a deck called `Niv-Mizzet, Parun` has a
@@ -26,18 +26,14 @@ export function toCsv(rows: (string | number | null | undefined)[][]): string {
 
 /**
  * A filename stem from the event's name: lowercase, non-alphanumerics to
- * hyphens, trimmed. Matches what the FastAPI app produced so a folder of
- * exports from both halves of the port sorts together.
+ * hyphens, trimmed.
  */
 export function slug(name: string): string {
-  // Letters and numbers in any script, not just ASCII: Python's str.isalnum()
-  // is Unicode-aware, so an event called "Caf\u00e9 Night" keeps its e there
-  // and an ASCII-only class here would have turned it into "caf--night". The
-  // two halves of the port have to agree while both exist.
+  // Letters and numbers in any script, not just ASCII: an event called
+  // "Caf\u00e9 Night" keeps its accent rather than becoming "caf--night".
   //
-  // Runs of hyphens are deliberately NOT collapsed, for the same reason: the
-  // FastAPI app did not collapse them, and a folder holding exports from
-  // before and after the cutover should sort together.
+  // Runs of hyphens are not collapsed: one hyphen per non-alphanumeric
+  // character, so the sort order of a folder of exports is predictable.
   const out = [...name.toLowerCase()]
     .map((c) => (/[\p{L}\p{N}]/u.test(c) ? c : "-"))
     .join("")

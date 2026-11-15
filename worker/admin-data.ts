@@ -1,6 +1,6 @@
 // Reads and writes for the admin surface.
 //
-// Ported from the roster and reset half of app/repository.py.
+// Roster CRUD, result counts, and the two reset levels.
 
 /** A player is part of a game if any of this is true. */
 const PLAYER_IN_A_GAME = `
@@ -196,10 +196,9 @@ export async function clearRoster(db: D1Database, eventId: number): Promise<numb
 /**
  * A point the database can be restored to, captured before anything is deleted.
  *
- * This is what replaced app/db.py's backup_database(), which copied the SQLite
- * file through the backup API and refused the reset if it could not. There is
- * no file here, and D1 keeps its own history, so the equivalent is to record
- * exactly where in that history the operator was standing and hand it back:
+ * There is no database file to copy and D1 keeps its own history, so the
+ * equivalent of a pre-delete backup is to record where in that history the
+ * operator was standing and hand it back:
  *
  *   wrangler d1 time-travel restore commander-tracker --bookmark=<it>
  *

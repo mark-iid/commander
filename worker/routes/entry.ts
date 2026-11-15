@@ -13,8 +13,7 @@
 // finishing order. The old single form demanded a placement on every save, so a
 // tracker three turns into a game could not save at all.
 //
-// Ported from app/routes/entry.py. The rules it decides by are in
-// worker/entry-rules.ts and tested against Python's answers; this file is the
+// The rules it decides by are in worker/entry-rules.ts; this file is the
 // plumbing around them.
 
 import { Hono } from "hono";

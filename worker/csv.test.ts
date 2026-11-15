@@ -1,4 +1,4 @@
-// The CSV writer, held to Python's csv.writer.
+// The CSV writer.
 //
 // The exports are the take-home record of a night and the data is free text
 // people typed: a deck called `Niv-Mizzet, Parun` has a comma in it, and a
@@ -11,16 +11,14 @@
 // deleting the quote-doubling left every other test green. Verified by
 // mutation, which is why this file exists.
 //
-// shared/fixtures/csv-quoting.json holds Python's own rendering of rows chosen
-// to exercise every branch of QUOTE_MINIMAL, so this is parity with the
-// implementation that produced the committed exports rather than with a
-// reading of RFC 4180.
+// shared/fixtures/csv-quoting.json holds recorded output for rows chosen to
+// exercise every branch of QUOTE_MINIMAL.
 
 import { expect, test } from "vitest";
 import quoting from "../shared/fixtures/csv-quoting.json" with { type: "json" };
 import { slug, stamp, toCsv } from "./csv.ts";
 
-test("it writes what Python's csv.writer writes", () => {
+test("it writes the recorded output for the awkward rows", () => {
   const rows = quoting.rows as (string | number | null)[][];
   expect(toCsv(rows)).toBe(quoting.csv);
 });
@@ -45,12 +43,9 @@ test("the filename stem strips what a filesystem would not thank us for", () => 
   expect(slug("Fall 2026 Battle of the Commanders")).toBe(
     "fall-2026-battle-of-the-commanders",
   );
-  // Punctuation becomes hyphens, one per character and runs not collapsed,
-  // which is what the FastAPI app did. Checked against it:
-  //   "".join(c if c.isalnum() else "-" for c in name.lower()).strip("-")
+  // Punctuation becomes hyphens, one per character, runs not collapsed.
   expect(slug("Jim's Night / Round #1")).toBe("jim-s-night---round--1");
-  // Letters keep their accents, because Python's isalnum() is Unicode-aware.
-  // An ASCII-only character class here would give "caf--night".
+  // Letters keep their accents; an ASCII-only class would give "caf--night".
   expect(slug("Caf\u00e9 Night")).toBe("caf\u00e9-night");
   expect(slug("\u6771\u4eac Night")).toBe("\u6771\u4eac-night");
   // An event named entirely in punctuation still produces a usable name.

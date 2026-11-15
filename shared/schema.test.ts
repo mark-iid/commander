@@ -5,8 +5,7 @@
 // SQLite, and node:sqlite speaks the same dialect, so this needs no Cloudflare
 // account and no network), the Fall 2026 fixture is loaded into it, and the
 // aggregation query is run over the result. Every derived row, every standing
-// and all eleven prize winners must match what the Python app computed from the
-// old schema.
+// and all eleven prize winners must match the recorded result.
 //
 // That is the whole claim phase 1 has to make: the schema changed, the data
 // moved, and not one result moved with it.
@@ -120,8 +119,6 @@ describe("damage follows the seating, not the history", () => {
   // The seated-damage join in aggregate.ts is a no-op for the Fall 2026 data,
   // because nobody was reseated that night. So the tests above would all pass
   // with the join deleted -- verified by mutation -- and this is what holds it.
-  // Python covers the same rule end to end in
-  // tests/test_full_night.py::test_a_player_reseated_away_takes_no_damage_with_them_or_leaves_any.
 
   function reseatAway(db: DatabaseSync, game_id: number, player_id: number): number {
     // Swap the player out of the table for somebody who was not at it, the way

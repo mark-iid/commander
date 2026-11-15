@@ -1,10 +1,4 @@
-// Ported from app/templates/auth/login.html.
-//
-// The transport warning that template carried is gone with the thing it warned
-// about: it fired when the page was served over plain HTTP while cookies were
-// Secure, which happened by reaching the container directly on the LAN. The
-// Worker answers on one HTTPS hostname and browsers treat localhost as secure,
-// so there is no longer a case where a correct passcode lands back here.
+// The sign-in page. One shared passcode, no accounts.
 
 import { html } from "hono/html";
 import type { Html } from "./html.ts";

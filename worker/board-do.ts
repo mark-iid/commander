@@ -1,14 +1,9 @@
 // The projected board's subscriber set, and the fan-out to it.
 //
-// Replaces app/events.py. That was a module-level set of asyncio queues, which
-// was sound because the deployment pinned `--workers 1`: one process, one set,
-// every save and every subscriber in it. Workers isolates do not share memory
-// and come and go, so a set in module scope would hold whichever subscribers
-// happened to land in the same isolate, and a save handled elsewhere would push
-// to none of them. The projector would simply stop updating, silently, which is
-// the exact failure the stream exists to prevent.
-//
-// So the set lives in one Durable Object, which every isolate reaches by name.
+// The set lives in a Durable Object because Workers isolates do not share
+// memory and are recycled. A subscriber set in module scope would hold only the
+// subscribers that landed in the same isolate, and a save handled elsewhere
+// would push to none of them: the board stops updating with no error.
 //
 // Nothing durable is stored. The subscribers are open connections and cannot
 // outlive the object, and the board itself is derived from D1 on demand.
@@ -23,8 +18,8 @@ interface Subscriber {
 /**
  * How often to send a comment line down an idle stream.
  *
- * sse_starlette did this for us. Without it an idle connection is closed
- * somewhere between the browser and here, and htmx's SSE extension reconnects,
+ * Without it an idle connection is closed somewhere between the browser and
+ * here, and htmx's SSE extension reconnects,
  * which works but puts the board through "Reconnecting" on a quiet table.
  * Shorter than the shortest proxy idle timeout worth worrying about.
  */

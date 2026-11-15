@@ -1,6 +1,6 @@
 // The entry surface, driven the way a tracker drives it.
 //
-// The rules are already held to Python's answers (worker/entry-rules.test.ts)
+// The rules are covered by worker/entry-rules.test.ts
 // and the writes to real D1 (worker/entry-data.test.ts). What is left to get
 // wrong is the surface itself: which form comes back, what it has in it, where
 // the tracker lands after a save, and which mistakes are refused rather than

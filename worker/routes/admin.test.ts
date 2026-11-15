@@ -117,8 +117,7 @@ describe("the roster", () => {
   });
 
   test("eligibility is a checkbox, and unticking it sticks", async () => {
-    // It used to be a list of names in event.yaml, which is what made renaming
-    // an excluded player dangerous.
+    // A column rather than a list of names, so a rename cannot change it.
     const id = await idOf("Ann");
     await post(`/admin/players/${id}`, new URLSearchParams({ name: "Ann" }));
     const row = await env.DB.prepare("SELECT prize_eligible FROM players WHERE player_id = ?")
@@ -198,11 +197,9 @@ describe("the danger zone", () => {
   });
 
   test("the all-scope confirmation says the roster is left empty", async () => {
-    // It used to promise a rebuild from event.yaml. There is no config roster
-    // to rebuild from any more, and promising one would be a lie.
+    // There is no configuration file to rebuild the roster from.
     const html = await (await get("/admin/reset/confirm?scope=all")).text();
     expect(html).toContain("left <strong>empty</strong>");
-    expect(html).not.toContain("event.yaml");
   });
 
   test("an unknown scope is refused", async () => {

@@ -14,16 +14,14 @@
   // nodejs_compat is NOT set on purpose: nothing in worker/ uses a node API,
   // and leaving it off keeps that true by failing the build if it creeps in.
   "assets": {
-    "directory": "./app/static",
+    "directory": "./static",
     "binding": "ASSETS",
     // Everything is a route the Worker answers; static files are fetched
     // through the binding from the layout's asset() helper.
     "run_worker_first": true
   },
-  // The projected board's subscriber set. app/events.py was an in-process
-  // broadcaster, which worked because the deployment pinned --workers 1;
-  // Workers isolates do not share memory, so the fan-out needs one object that
-  // every isolate can reach. See docs/adr/0003 phase 3.
+  // The projected board's subscriber set. Workers isolates do not share
+  // memory, so the SSE fan-out needs one object every isolate can reach.
   "durable_objects": {
     "bindings": [{ "name": "BOARD", "class_name": "Board" }]
   },

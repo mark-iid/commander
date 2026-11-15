@@ -1,15 +1,10 @@
 // The admin surface: the roster, and the danger zone.
 //
-// Ported from app/templates/admin/. Two things changed with the schema, and the
-// pages say so rather than carrying the old wording:
+// Prize eligibility is a checkbox per player, because it is a column rather
+// than a list of names in a config file: renaming a player cannot change it.
 //
-//   * A player's prize eligibility is a checkbox here. It used to be a list of
-//     names in event.yaml, which is what made renaming an excluded player
-//     dangerous (the rename quietly made them eligible again). It is a column
-//     now, so renaming is simply safe and there is no config to edit.
-//   * "Reset everything" no longer rebuilds the roster from config, because
-//     there is no config roster to rebuild it from. It leaves the roster empty
-//     and the confirmation says so.
+// "Reset everything" leaves the roster empty. There is no configuration file to
+// rebuild it from, and the confirmation says so.
 
 import { html, raw } from "hono/html";
 import { COMMANDER_MAX } from "../fields.ts";

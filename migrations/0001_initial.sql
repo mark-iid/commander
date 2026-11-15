@@ -1,38 +1,21 @@
--- Commander Tracker, initial schema. Phase 1 of docs/adr/0003.
+-- Commander Tracker, initial schema.
 --
--- D1 is SQLite, so ADR 0002's model crosses over in shape: one row per player
--- per turn cycle (turn_stats + turn_damage), per-opponent combat damage, and a
--- small per-game section filled in at death or win. docs/DATA_MODEL.md still
--- describes it.
+-- One row per player per turn cycle (turn_stats + turn_damage), with combat
+-- damage stored per opponent, plus a small per-game section filled in at death
+-- or win. docs/DATA_MODEL.md describes it and maps each prize to its field.
 --
--- Conventions, following the other D1 project on this account: STRICT tables,
--- integer 0/1 for booleans, ISO 8601 UTC timestamps, YYYY-MM-DD dates, CHECK
--- with an IN list wherever a column is really an enum.
+-- Conventions: STRICT tables, integer 0/1 for booleans, ISO 8601 UTC
+-- timestamps, YYYY-MM-DD dates, CHECK with an IN list wherever a column is
+-- really an enum.
 --
--- Deliberate deviation: primary keys stay event_id / player_id / game_id rather
--- than a bare `id`. Half the tables here have composite keys that read as
--- (game_id, player_id, round_no), the aggregation query joins on those names,
--- and app/schema.sql used them, so the import maps column for column with
--- nothing to transcribe. Fidelity is worth more here than house style.
+-- Primary keys are event_id / player_id / game_id rather than a bare `id`:
+-- half the tables have composite keys that read as
+-- (game_id, player_id, round_no) and the aggregation query joins on those
+-- names.
 --
--- WHAT CHANGED from app/schema.sql, all of it to make the app multi-event:
---
---  * Event configuration lives here rather than in config/event.yaml. Each
---    event carries its own prizes, placement points and damage fields, which
---    is the whole point: a second tournament is a row, not a redeploy. It also
---    removes the worst trap in the old deployment, where event.yaml lived only
---    on the host, was excluded from deploys, and a renamed scoring field left
---    every prize silently unclaimed.
---  * players.prize_eligible replaces scoring.prize_ineligible. A flag on the
---    person cannot be broken by a rename or by YAML reading a lone name as a
---    string of letters, both of which have happened.
---  * players.roster_position is explicit. Roster order is the scoring engine's
---    last-resort tiebreaker, so it must survive an admin editing the roster
---    rather than being whatever order the rows were inserted in.
---  * game_player_stats.placement is CHECK (>= 1), not BETWEEN 1 AND 4. pod_size
---    was already configurable and the old constraint contradicted it: a
---    five-player pod failed on write.
---  * pods are rows, not a YAML list, so a pod can be called "Table 1".
+-- Event configuration is rows here rather than a file, so a second tournament
+-- is a row and not a redeploy, and there is no configuration that can be out
+-- of step with the deployment.
 
 CREATE TABLE events (
   event_id INTEGER PRIMARY KEY,

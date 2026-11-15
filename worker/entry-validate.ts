@@ -1,10 +1,7 @@
 // Parsing and checking a submitted entry form.
 //
-// Replaces the pydantic models in app/models.py plus the validation inside
-// app/routes/entry.py. The messages are the tracker's, not a developer's:
-// pydantic's own "Input should be a valid integer, unable to parse string as an
-// integer" was what a tracker on a phone got for leaving a box empty, which
-// says nothing about which box or what to do.
+// Messages are written for a tracker on a phone, not a developer. A generic
+// "Input should be a valid integer" says nothing about which box or what to do.
 //
 // Every message here is placed under the box it belongs to. A message at the
 // top of a form with nine numbered boxes in it says nothing about which one.

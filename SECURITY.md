@@ -1,60 +1,47 @@
 # Security
 
-## Reporting something
+## Reporting
 
-Use GitHub's private vulnerability reporting on this repository: **Security** tab,
-then **Report a vulnerability**. That keeps the report private until there is a
-fix, and needs no email address from either of us.
+Use GitHub's private vulnerability reporting on this repository: **Security**
+tab, then **Report a vulnerability**.
 
-This is a games-night scoreboard maintained by one person in their spare time.
-There is no SLA. What you will get is an acknowledgement and an honest answer
-about whether and when it will be fixed.
+This is a scoreboard maintained by one person. There is no SLA.
 
-## What this app actually is
+## Threat model
 
-Worth being plain about the threat model, because it is unusual and it is a
-deliberate choice rather than an oversight.
+There are no user accounts. One shared passcode, typed by every tracker, is
+exchanged for a signed session cookie. That fits a private game night where the
+people entering data are in the room. It does not give you per-user identity or
+an audit trail.
 
-**There are no user accounts.** One shared passcode, typed by every tracker,
-exchanged for a signed session cookie. That matches a private game night where
-the people entering data are in the room and the organiser tells them the
-passcode. It does not match anything where you need to know who did what.
-
-**The app refuses to serve its guarded surfaces without a configured passcode.**
 `/entry`, `/admin`, `/results` and `/results.csv` answer 503 naming the missing
-secret rather than serving unauthenticated. An unauthenticated `/entry` on the
-internet is the specific failure that guard exists to prevent.
+secret while `TRACKER_PASSCODE` or `SESSION_SECRET` is unset or still
+`change-me`, rather than serving unauthenticated.
 
-**The projected board is public by default**, because it is meant to be on a
-screen in the room. `PROTECT_DISPLAY=true` gates it too. `/results` is always
-guarded, even when the board is open, because the CSV carries per-game rows for
-named people, which is a step past the standings the room can already see.
+`/display` is public by default, because it is meant to be on a screen in the
+room. `PROTECT_DISPLAY=true` gates it. `/results` is always gated even when the
+board is open, because the CSV carries per-game rows for named people.
 
-**Cloudflare Access in front of it is recommended**, and is the answer if you
-want real identity rather than a shared secret.
+Cloudflare Access in front of the app is the answer if you need real identity
+rather than a shared secret.
 
-### Known limits, stated rather than hidden
+## Known limits
 
 - The login throttle keys on `CF-Connecting-IP`, which is attacker-controlled
-  anywhere that is not behind Cloudflare. It can only ever split the throttle
-  bucket, never bypass the passcode, and the table it writes to is bounded by
-  both age and row count for that reason.
-- Behind Cloudflare, every tracker in a room can share one source address, so the
-  lockout is deliberately short (five attempts, 60 seconds). A long lockout would
-  take the whole room offline over one typo.
-- The session cookie is signed, not encrypted. It carries no secret, only a
-  marker and when it was issued, and the issued-at is checked server side so a
-  cookie copied off a phone does not outlive `SESSION_HOURS`.
-- Player names and deck names are free text and are rendered escaped. They are
-  not sanitised on the way in, on purpose: a name is whatever its owner says it
-  is.
+  anywhere not behind Cloudflare. It can only split the throttle bucket, never
+  bypass the passcode, and the table it writes to is bounded by both age and
+  row count.
+- Behind Cloudflare, a whole room can share one source address, so the lockout
+  is five attempts for 60 seconds. A longer one would take the room offline
+  over a typo.
+- The session cookie is signed, not encrypted. It carries a marker and an
+  issued-at, no secret, and the issued-at is checked server side so a copied
+  cookie does not outlive `SESSION_HOURS`.
+- Player and deck names are free text, rendered escaped, and not sanitised on
+  input.
 
 ## Secrets
 
-`TRACKER_PASSCODE` and `SESSION_SECRET` are secrets and never belong in the
-repository or in an event's configuration. On the Worker they are
-`wrangler secret put`; locally they are `.dev.vars`, which is gitignored. The
-example files carry placeholders that the app refuses to start on.
-
-Neither `config/event.yaml` nor `.env` has ever been committed to this
-repository, and both are gitignored.
+`TRACKER_PASSCODE` and `SESSION_SECRET` are Worker secrets
+(`wrangler secret put`) and `.dev.vars` locally, which is gitignored. The
+example file carries placeholders the app refuses to start on.

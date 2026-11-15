@@ -1,9 +1,0 @@
-{# The autosave's only visible effect, and the one thing that makes it safe to
-   trust: a save that quietly failed would leave a tracker switching player
-   certain their numbers were kept.
-
-   `oob` is set when this is the reply to an autosave; the turn form includes it
-   unset, so the element is already on the panel for that swap to land in. #}
-<span id="turn-draft-status"
-      class="draft-status{% if draft_bad %} bad{% endif %}"
-      role="status"{% if oob %} hx-swap-oob="true"{% endif %}>{{ draft_status | default('') }}</span>

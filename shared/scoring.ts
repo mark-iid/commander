@@ -2,17 +2,15 @@
 // Pure functions, no I/O, no framework imports, so it runs the same in a test,
 // in a Worker and in a script.
 //
-// A faithful port of app/scoring.py, deliberately structured the same way so
-// the two can be read side by side. Equivalence is not assumed: both engines
-// run over the real Fall 2026 night in shared/scoring.golden.test.ts and must
-// agree exactly. If you change one, change both, and that test is the gate.
+// Held to a recorded event in shared/scoring.golden.test.ts: the standings,
+// the board order and all eleven prize winners must come out unchanged.
 //
 // Field names are snake_case throughout, which is not an accident and not a
 // style slip. Config refers to these fields BY NAME as strings -- a prize says
 // `metric: combat_dmg_dealt`, a tiebreak says `field: win_points` -- so the
 // property names are part of the config format. Renaming them to camelCase
-// would silently break every event.yaml in existence, and silently is the
-// operative word: an unknown metric reads as zero rather than raising.
+// would break every existing event configuration, and silently: an unknown
+// metric reads as zero rather than raising.
 
 // --- Inputs -----------------------------------------------------------------
 
@@ -133,7 +131,7 @@ const STAT_DEFAULTS = {
   played: true,
 } as const;
 
-/** A stat row with the same defaults the Python dataclass applies. */
+/** A stat row with every unnamed field defaulted. */
 export function gamePlayerStat(
   fields: Pick<GamePlayerStat, "game_id" | "player" | "placement"> & Partial<GamePlayerStat>,
 ): GamePlayerStat {
@@ -147,7 +145,7 @@ export function gamePlayerStat(
  * stat is a broken config rather than a zero: this is the one list where a typo
  * must not be survivable, because it silently redefines the tiebreaker every
  * win-point prize rests on. Prize metrics and tiebreak fields take the lenient
- * path through totals/peaks instead, matching Python's dict .get(name, 0).
+ * path through totals/peaks instead, where an unknown name reads as zero.
  */
 function statField(s: GamePlayerStat, name: string): number {
   const v = (s as unknown as Record<string, unknown>)[name];
@@ -281,8 +279,8 @@ export function resolvePrize(
  * Players yet to play are all level on zero, so they share the last rank.
  */
 export function rankedStandings(standings: PlayerStanding[]): [number, PlayerStanding][] {
-  // Copied before sorting: Python's sorted() returns a new list, and a caller
-  // that still holds the roster-ordered array needs it to stay that way.
+  // Copied before sorting: a caller that still holds the roster-ordered array
+  // needs it to stay that way.
   const ordered = [...standings].sort(
     (a, b) => b.win_points - a.win_points || b.total_damage - a.total_damage,
   );
@@ -327,10 +325,7 @@ export interface EventConfigInput {
   }[];
 }
 
-/**
- * Build a ScoringConfig from parsed event config, mirroring
- * ScoringConfig.from_dict in app/scoring.py.
- */
+/** Build a ScoringConfig from event configuration as it comes out of D1. */
 export function scoringConfigFrom(cfg: EventConfigInput): ScoringConfig {
   const pp = cfg.scoring.placement_points;
   const placement_points =

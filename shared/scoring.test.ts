@@ -1,9 +1,6 @@
 // Scoring verification against a known 4-player / 3-game sample.
 //
-// Ported from tests/test_scoring.py, test for test and comment for comment, so
-// a reviewer can diff the two files and see that nothing was quietly dropped.
-// Expected winners were computed independently and hand-checked on the Python
-// side. If you change either engine, both suites must still pass.
+// Expected winners were computed independently and hand-checked.
 
 import { describe, expect, test } from "vitest";
 import { fixture } from "./fixtures/fall-2026.ts";
@@ -247,8 +244,8 @@ describe("tiebreaks", () => {
   });
 
   test("every configured tiebreak names a real stat", () => {
-    // An unknown field reads as zero for everyone, so a typo in event.yaml
-    // would quietly turn a tiebreak back into roster order.
+    // An unknown field reads as zero for everyone, so a typo in a prize's
+    // configuration would quietly turn a tiebreak back into roster order.
     for (const prize of config().prizes) {
       expect(prize.tiebreak, prize.key).not.toBeNull();
       expect(KNOWN_FIELDS, prize.key).toContain(prize.tiebreak!.field);
@@ -331,9 +328,8 @@ describe("rankedStandings", () => {
   });
 
   test("the roster-ordered array it was given is left in roster order", () => {
-    // Python's sorted() returns a new list; a sort in place here would reorder
-    // the caller's standings and silently change the roster-order tiebreak that
-    // resolvePrize depends on.
+    // A sort in place would reorder the caller's standings and silently change
+    // the roster-order tiebreak that resolvePrize depends on.
     const standings = buildStandings(STATS, config(), ROSTER);
     rankedStandings(standings);
     expect(standings.map((s) => s.player)).toEqual(ROSTER);

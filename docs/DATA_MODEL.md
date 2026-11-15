@@ -1,17 +1,10 @@
 # Data Model
+One row per player per turn cycle, plus a short per-game section filled in when a
+player is out. This follows the event owner's tracking sheet, which is turn-shaped
+with a damage column per opponent.
 
-> **A second schema now exists.** `migrations/0001_initial.sql` is the D1 schema
-> phase 1 of [ADR 0003](adr/0003-cloudflare-workers-port.md) added. It carries
-> the model below over unchanged in shape and adds the tables that make the app
-> multi-event. This document describes `app/schema.sql`, which is what the
-> running app still uses; see [D1_MIGRATION.md](D1_MIGRATION.md) for the
-> differences and why.
-
-
-The app records **one row per player per turn cycle**, plus a short per-game section
-filled in when a player is out. This follows the event owner's tracking sheet; it
-replaces the original "one record per player per game" design (see
-[ADR 0002](adr/0002-turn-level-granularity.md), which supersedes that part of ADR 0001).
+A per-game design was tried first and abandoned: it required a placement on every
+save, so nothing could be recorded until a game had finished.
 
 Two words that used to be one:
 
@@ -73,7 +66,7 @@ A blank box deletes the row rather than storing `''`, which keeps "no deck recor
 single state. `clear_results` wipes the table for the same reason it wipes seating: a
 deck pre-filled for a match with no results is a stale arrangement, not a result.
 
-**Nothing in `app/scoring.py` reads this.** Commander damage travels with the person,
+**Nothing in the scoring engine reads this.** Commander damage travels with the person,
 not with the deck they brought (event owner's call, 2026-11-14) — see "What counts as
 damage" below.
 
@@ -114,8 +107,8 @@ Win Points is **derived** (placement → points via config, summed per player), 
 
 ## Derived per-game stats
 
-`app/scoring.py` still consumes one `GamePlayerStat` per player per game. The repository
-assembles it from the turn tables (`_DERIVED_STATS` in `app/repository.py`), which is the
+The scoring engine consumes one `GamePlayerStat` per player per game, assembled from the
+turn tables by the query in `shared/aggregate.ts`, which is the
 whole of the translation between the two granularities — and the reason the scoring engine
 did not change when the granularity did.
 
@@ -303,4 +296,4 @@ the prompt — the player's own form remains the fallback it always was.
 ## Storage note
 
 Model is deliberately relational and boring so SQLite → Postgres is a driver swap. Keep all
-SQL behind the `Storage` protocol in `app/repository.py`.
+SQL in `worker/data.ts`, `worker/entry-data.ts` and `worker/admin-data.ts`.

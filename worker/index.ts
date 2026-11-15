@@ -1,13 +1,10 @@
 // The Worker. Phase 2 of ADR 0003.
 //
-// Replaces app/main.py: the same surfaces (entry, admin, display, results)
-// served from Hono over D1 instead of FastAPI over SQLite. The HTMX on the
-// pages is unchanged, because it was always server-rendered partials and that
-// does not care what rendered them.
+// Four surfaces: entry, admin, display, results. Hono over D1, server-rendered
+// partials driven by HTMX.
 //
-// No startup hook, unlike the FastAPI app. There is nothing to seed: the event
-// and its configuration are rows, applied by migrations and edited in /admin,
-// rather than a YAML file read into memory at boot.
+// No startup hook. There is nothing to seed: the event and its configuration
+// are rows, applied by migrations and edited in /admin.
 
 import { Hono } from "hono";
 import { assetRequest } from "./assets.ts";
@@ -25,10 +22,9 @@ const app = new Hono<{ Bindings: Env }>();
  *
  * Which prefixes it covers is configuration (PROTECT_DISPLAY), the same as the
  * YAML knob it replaces. The misconfigured check is here rather than at
- * startup because a Worker has no startup: FastAPI refused to boot without a
- * passcode, and the equivalent is refusing to serve the guarded surfaces. An
- * unauthenticated /entry must not be reachable by accident, and the 503 says
- * which secret is missing rather than failing silently open.
+ * startup because a Worker has no startup. An unauthenticated /entry must not
+ * be reachable by accident, so the guarded surfaces answer 503 naming the
+ * missing secret rather than failing open.
  */
 app.use("*", async (c, next) => {
   if (!isProtected(new URL(c.req.url).pathname, protectedPrefixes(c.env))) return next();

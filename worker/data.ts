@@ -1,8 +1,8 @@
 // Reading an event and its configuration out of D1.
 //
-// What app/config.py used to do by parsing config/event.yaml, except the config
-// is rows now (phase 1 of ADR 0003), so there is no file to be out of date with
-// the deployment and no renamed field that silently unclaims every prize.
+// The configuration is rows rather than a file, so there is nothing to be out
+// of date with the deployment and no renamed field that silently unclaims every
+// prize.
 //
 // Everything here is a read. Writes live beside the route that performs them.
 

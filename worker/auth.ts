@@ -1,22 +1,21 @@
-// Shared-passcode session auth, ported from app/auth.py (ADR 0001, decision 6).
+// Shared-passcode session auth.
 //
 // No user accounts: one passcode, held as a Worker secret, exchanged for a
 // signed cookie. That matches the trust model of a private game night while
 // still being safe to expose on the internet, and Cloudflare Access is the
 // recommended second layer.
 //
-// Three things changed in the move off FastAPI, each because the platform did:
+// Three things follow from running on Workers:
 //
-//   * The throttle is a D1 table, not a dict. See migrations/0002.
-//   * There is no startup check. FastAPI refused to boot on a missing
-//     passcode; a Worker has no boot, so the guard answers 503 instead. Same
-//     intent: an unauthenticated /entry must not be reachable by accident.
-//   * The cookie is always Secure, and the `secure_cookies` config knob is
-//     gone. The Worker answers on one HTTPS hostname, and browsers treat
-//     localhost as secure, so there is no case left where Secure is wrong.
-//     That also retires the "served over plain HTTP" warning on the login
-//     page, which existed because reaching the container directly on the LAN
-//     made a Secure cookie silently undeliverable.
+//   * The throttle is a D1 table, not in-process state (migrations/0002),
+//     because isolates do not share memory and a per-isolate lockout would
+//     evaporate when one is recycled.
+//   * There is no startup check, because a Worker has no startup. The guard
+//     answers 503 instead, so an unauthenticated /entry is not reachable by
+//     accident.
+//   * The cookie is always Secure. The Worker answers on one HTTPS hostname and
+//     browsers treat localhost as secure, so there is no case where it is
+//     wrong.
 
 import type { Context } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";

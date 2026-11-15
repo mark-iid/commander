@@ -2,7 +2,6 @@
 // much as for screen. The PDF comes from the browser's own print dialog, which
 // keeps the event's look and costs no rendering dependency.
 //
-// Ported from app/templates/results/index.html.
 
 import { html } from "hono/html";
 import { GAME_STAT_FIELDS } from "../fields.ts";

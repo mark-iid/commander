@@ -1,7 +1,7 @@
 // Roster admin, and the danger zone.
 //
-// Ported from app/routes/admin.py. The roster lives in the database and this
-// surface owns it: add, rename, set commander, set prize eligibility, delete.
+// The roster lives in the database and this surface owns it: add, rename, set
+// commander, set prize eligibility, delete.
 //
 // Deletion is refused for any player who is part of a game. Every table that
 // references a player cascades, so allowing it would silently destroy that
@@ -51,7 +51,7 @@ import {
 
 export const admin = new Hono<{ Bindings: Env }>();
 
-/** The two reset levels, mirroring scripts/reset.py. Keep them in step. */
+/** The two reset levels. */
 const RESET_SCOPES = ["results", "all"];
 
 const GONE = "That player is no longer on the roster.";
@@ -206,10 +206,8 @@ admin.post("/players/:id", async (c) => {
     );
   }
 
-  // No rename guard any more. It existed because prize_ineligible named
-  // players as text in event.yaml, so renaming an excluded player quietly made
-  // them eligible again. Eligibility is a column on the player now, and it is
-  // on this form, so a rename cannot change it.
+  // No rename guard: eligibility is a column on the player and is on this
+  // form, so a rename cannot change it.
   try {
     await updatePlayer(
       c.env.DB,

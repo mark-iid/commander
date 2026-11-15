@@ -1,25 +1,19 @@
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-*.egg-info/
-.pytest_cache/
-.ruff_cache/
-
-# App
-commander.db
-commander.db-wal
-commander.db-shm
-config/event.yaml
-.env
-
 # OS/editor
 .DS_Store
 .idea/
 .vscode/
 
-# Node (TypeScript port, see docs/adr/0003)
+# Build artefacts of the implementation this replaced
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+commander.db
+commander.db-wal
+commander.db-shm
+
 node_modules/
 
 # Wrangler local state (local D1 for tests)
@@ -30,13 +24,25 @@ node_modules/
 # ...but the template carries no secrets and is how anyone knows what to set.
 !.dev.vars.example
 
-# Session scaffolding, not part of the app. These were the briefs and handoff
-# notes the build ran on, and they carry homelab specifics (container ids,
-# private addresses, internal hostnames) that have no business in a public
-# repository. Kept on disk, out of the tree.
+# Build notes and briefs, kept on disk and out of the tree.
 /handoff/
 /ARCHITECT.md
 /BUILDER.md
 /REVIEWER.md
 /new-setup.md
 /.claude/
+
+# Not part of this repository. The Worker is the app; these paths are the
+# self-hosted implementation it replaced, which lives on a separate remote.
+/app/
+/config/
+/tests/
+/scripts/
+/pyproject.toml
+/.env.example
+/.forgejo/
+/Containerfile
+/.containerignore
+/docs/EMERGENCY.md
+/docs/D1_MIGRATION.md
+/docs/adr/

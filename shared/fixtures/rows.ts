@@ -1,14 +1,9 @@
 // Turning a fixture into rows for the schema in migrations/0001_initial.sql.
 //
-// Runtime-free on purpose: no node imports and no D1, so both the node:sqlite
-// tests and the Worker tests load the same mapping. It is the same job
-// scripts/export_for_d1.py does for the real data, written a second time in
-// another language, and both are checked against the same expected results --
-// so if the two readings of the migration disagree, a test says so.
+// Runtime-free: no node imports and no D1, so both the node:sqlite tests and
+// the Worker tests load the same mapping.
 //
-// The fixture's `raw` section is the OLD schema, because that is what it is: a
-// record of the database the night was played on. What the mapping has to add,
-// none of which existed as a column before:
+// The fixture's `raw` section is the event as recorded. What the mapping adds:
 //   pods              rows, from the distinct pod labels the games used
 //   roster_position   explicit, from the fixture's roster order
 //   prize_eligible    a flag per player, from scoring.prize_ineligible

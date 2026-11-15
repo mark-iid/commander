@@ -1,8 +1,7 @@
 // The declarative stat descriptions the forms and the sheets render from.
 //
-// Ported from TURN_FIELDS and GAME_STAT_FIELDS in app/models.py. Adding a stat
-// means editing a list here, plus a migration and a prize in the event's
-// config, rather than rewriting a form.
+// Adding a stat means editing a list here, plus a migration and a prize in the
+// event's configuration, rather than rewriting a form.
 //
 // `name` is the field name the scoring engine and the event config refer to, so
 // it has to match the column and the `metric:` in a prize exactly.

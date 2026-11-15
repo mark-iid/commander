@@ -18,7 +18,7 @@ import { assetPath, assetRequest } from "./assets.ts";
 import app from "./index.ts";
 
 test("the /static prefix comes off, because the binding serves from its own root", () => {
-  // app/static/app.css is /app.css to the binding. Forwarding /static/app.css
+  // static/app.css is /app.css to the binding. Forwarding /static/app.css
   // unchanged 404s every asset on every page.
   expect(assetPath("/static/app.css")).toBe("/app.css");
   expect(assetPath("/static/htmx.min.js")).toBe("/htmx.min.js");

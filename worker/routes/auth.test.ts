@@ -1,12 +1,6 @@
-// The passcode guard, ported from tests/test_auth.py.
+// The passcode guard.
 //
-// The four tests about the plain-HTTP cookie warning are deliberately absent:
-// that warning covered reaching the container directly on the LAN while
-// cookies were Secure, and the Worker answers on one HTTPS hostname. The two
-// startup-refusal tests became the 503 below, since a Worker has no startup.
-//
-// The throttle tests are the ones worth reading. On FastAPI the throttle was a
-// dict in the one uvicorn process; here it is a D1 table, because Workers
+// The throttle is a D1 table rather than in-process state, because Workers
 // isolates do not share memory and a per-isolate lockout would evaporate.
 
 import { env } from "cloudflare:test";
@@ -106,7 +100,6 @@ describe("the guard", () => {
   });
 
   test("a guarded surface refuses to serve while the passcode is unset", async () => {
-    // What FastAPI's startup check did, at the only moment a Worker can do it.
     // The failure this prevents is an unauthenticated /entry on the internet,
     // so it must not fail open.
     for (const broken of [{ TRACKER_PASSCODE: "" }, { TRACKER_PASSCODE: "change-me" }, { SESSION_SECRET: "" }]) {

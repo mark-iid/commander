@@ -1,14 +1,7 @@
 // The tracker data-entry surface.
 //
-// Ported from the eight partials under app/templates/entry/. The structure is
-// kept exactly: one swap target (#entry-panel) for every save, with the pod
-// table swapped out of band beside it, so a turn, a finish and a reseat all
-// land the same way and nothing can drift apart.
-//
-// The HTMX attributes are unchanged. They were already server-rendered
-// partials, which is why this port is a transcription rather than a rewrite,
-// and every comment explaining why an attribute is where it is has come across
-// with it.
+// One swap target (#entry-panel) for every save, with the pod table swapped out
+// of band beside it, so a turn, a finish and a reseat all land the same way.
 
 import { html, raw } from "hono/html";
 import type { GamePlayerStat } from "../../shared/scoring.ts";

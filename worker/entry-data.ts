@@ -1,9 +1,8 @@
 // Reads and writes for the entry surface.
 //
-// Ported from the entry half of app/repository.py. D1 has no open transaction
-// to hold across statements, so anything that has to be all-or-nothing goes
-// through db.batch(), which D1 applies atomically. Where that matters is called
-// out at the site.
+// D1 has no open transaction to hold across statements, so anything that has
+// to be all-or-nothing goes through db.batch(), which D1 applies atomically.
+// Where that matters is called out at the site.
 
 import { enteredKey } from "./entry-rules.ts";
 

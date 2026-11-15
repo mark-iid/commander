@@ -7,10 +7,8 @@
 // roster order is the engine's last-resort tiebreaker, so shuffling the names
 // would change which player wins a full tie and quietly weaken this test.
 //
-// `derived` and `expected` in that file were produced by running app/scoring.py
-// (via app/repository.py's aggregation) over `raw`. scripts/fixture_expected.py
-// regenerates them and is what keeps Python the reference implementation: if it
-// and this file ever disagree, the engines have diverged.
+// `derived` is what the aggregation query makes of `raw`; `expected` is what
+// the scoring engine makes of `derived`. Both were recorded from the event.
 //
 // Why a real night on top of the hand-built sample in scoring.test.ts: the
 // sample was designed, so it only contains cases somebody thought of. This one
@@ -30,16 +28,16 @@ const derived = fixture.derived;
 const config = scoringConfigFrom(fixture);
 const roster = fixture.roster;
 
-test("the real night's standings match Python's", () => {
+test("the recorded standings come out unchanged", () => {
   expect(buildStandings(derived, config, roster)).toEqual(fixture.expected.standings);
 });
 
-test("the real night's board order and ranks match Python's", () => {
+test("the recorded board order and ranks come out unchanged", () => {
   const ranked = rankedStandings(buildStandings(derived, config, roster));
   expect(ranked.map(([rank, st]) => [rank, st.player])).toEqual(fixture.expected.ranked);
 });
 
-test("the real night's prize winners match Python's", () => {
+test("the recorded prize winners come out unchanged", () => {
   expect(leaderboard(derived, config, roster)).toEqual(fixture.expected.prizes);
 });
 

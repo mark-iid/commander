@@ -1,17 +1,14 @@
 // Rebuilding the per-game scalars the scoring engine consumes from the turn
 // tables. The storage granularity is per turn, the engine's is per game, and
 // this query is the whole of the translation between them -- which is why
-// app/scoring.py never changed when the granularity did (ADR 0002).
+// the scoring engine is unaffected by the storage granularity.
 //
 //   totals  SUM over a player's turns (combat dealt and taken, commander,
 //           non-combat, eliminations, creatures attacked with)
 //   peaks   MAX over a player's turns (biggest attack dealt and taken, creatures)
 //   final   joined straight from game_player_stats (placement, life, graveyard)
 //
-// This is a relocation, not a port: D1 is SQLite, so the SQL is the same text
-// that ran in app/repository.py. Nothing was reimplemented, which is the
-// cheapest possible way to move the second-riskiest piece of the app, and
-// shared/schema.test.ts holds the result to the real night either way.
+// shared/schema.test.ts holds the result of this query to a recorded event.
 //
 // "Biggest attack dealt" is a turn's combat damage summed across every
 // opponent, because one declared attack in Commander can hit several players at

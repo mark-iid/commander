@@ -1,9 +1,8 @@
 // The results sheet and the two exports.
 //
-// The CSVs are held to the FastAPI app's own output over the same night, byte
-// for byte: shared/fixtures/fall-2026-results.csv and -turns.csv were captured
-// by scripts/results_csv_fixture.py and are kept honest by
-// tests/test_results_csv_fixture.py. These are the take-home record of an
+// The CSVs are compared byte for byte against recorded output in
+// shared/fixtures/fall-2026-results.csv and -turns.csv. These are the
+// take-home record of an
 // event, so a shifted column or a different row order is the kind of damage
 // nobody notices until they read the sheet months later.
 
@@ -42,14 +41,14 @@ beforeAll(async () => {
 });
 
 describe("the exports", () => {
-  test("/results.csv is byte-identical to the Python app's", async () => {
+  test("/results.csv is byte-identical to the recorded export", async () => {
     const res = await get("/results.csv");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/csv");
     expect(await res.text()).toBe(expectedResultsCsv);
   });
 
-  test("/results/turns.csv is byte-identical to the Python app's", async () => {
+  test("/results/turns.csv is byte-identical to the recorded export", async () => {
     const res = await get("/results/turns.csv");
     expect(res.status).toBe(200);
     expect(await res.text()).toBe(expectedTurnsCsv);
