@@ -12,6 +12,7 @@ database, not code.
 
 | Path | Auth | Purpose |
 |---|---|---|
+| `/` | open | The active event, its top three (only when the board is open to the visitor), and a link to each surface |
 | `/entry` | passcode | Seat a table, record turns, record deaths and wins |
 | `/display` | open by default | Projected standings and prize board, live over SSE; click a prize for its full ranking |
 | `/results` | passcode | Printable results sheet |

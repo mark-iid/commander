@@ -280,6 +280,45 @@ tr.current th, tr.current td { background: var(--surface-2); }
    with Cancel as if the button were a direct child. */
 .danger-zone .actions form { margin: 0; }
 
+/* --- home --------------------------------------------------------------- */
+
+.home-hero { padding: 1.25rem; border-top: 3px solid var(--accent); }
+.home-hero h1 { font-size: 1.7rem; margin: 0 0 0.25rem; }
+.home-meta { margin: 0 0 1rem; color: var(--muted); }
+.home-hero .hint, .home-hero .empty { margin: 0.75rem 0 0; }
+
+.home-leaders { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.home-leaders li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+.home-leaders .rank { width: 1.25rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.home-leaders .name { flex: 1; font-weight: 600; }
+.home-leaders .pts { color: var(--muted); font-variant-numeric: tabular-nums; }
+.home-leaders li.first { box-shadow: inset 3px 0 0 var(--warn); }
+.home-leaders li.first .rank, .home-leaders li.first .pts { color: var(--warn); }
+
+.home-surfaces {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+.home-surfaces .surface {
+  display: block;
+  margin: 0;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.home-surfaces .surface:hover, .home-surfaces .surface:focus-visible { border-color: var(--accent); outline: none; }
+.home-surfaces .card-head { margin-bottom: 0.35rem; }
+.surface-name { font-size: 1.05rem; font-weight: 600; color: var(--accent); }
+.surface-about { display: block; color: var(--muted); font-size: 0.9rem; }
+
 /* --- mobile ------------------------------------------------------------- */
 /* Trackers work from their own phones at the table, so entry and admin have to
    be usable on a 360px screen rather than merely reachable on one. The layout

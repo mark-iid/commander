@@ -13,6 +13,7 @@ import { auth, challenge } from "./routes/auth.ts";
 import { admin } from "./routes/admin.ts";
 import { display } from "./routes/display.ts";
 import { entry } from "./routes/entry.ts";
+import { home } from "./routes/home.ts";
 import { results } from "./routes/results.ts";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -42,13 +43,7 @@ app.route("/admin", admin);
 // /results/turns.csv, which are not under one prefix.
 app.route("/", results);
 
-app.get("/", (c) =>
-  c.html(
-    "<h1>Commander Tracker</h1>" +
-      "<p>Surfaces: <a href='/entry'>/entry</a>, " +
-      "<a href='/admin'>/admin</a>, <a href='/display'>/display</a>.</p>",
-  ),
-);
+app.route("/", home);
 
 // Static assets. See worker/assets.ts for why the prefix comes off.
 app.all("/static/*", (c) => c.env.ASSETS.fetch(assetRequest(c.req.raw)));
