@@ -10,6 +10,7 @@ import type { Html } from "./html.ts";
 import type { PlayerStanding, Prize, PrizeRankRow, PrizeResult } from "../../shared/scoring.ts";
 import type { EventRow } from "../data.ts";
 import { GAME_STAT_FIELDS } from "../fields.ts";
+import { ICON_LINKS } from "./layout.ts";
 
 export interface BoardData {
   event: EventRow;
@@ -181,6 +182,7 @@ export function displayPage(data: BoardData): Html {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${event.name} - Leaderboard</title>
+  ${ICON_LINKS}
   <!-- No content hash on these any more: see worker/assets.ts for what
        replaced it and what was verified. -->
   <link rel="stylesheet" href="/static/norton.css">

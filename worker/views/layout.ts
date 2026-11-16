@@ -10,6 +10,11 @@
 import { html, raw } from "hono/html";
 import type { Html } from "./html.ts";
 
+/** Shared with the projected board, which has its own <head>. */
+export const ICON_LINKS = html`<link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">`;
+
 export interface LayoutOptions {
   title?: string;
   heading?: string;
@@ -25,6 +30,7 @@ export function layout(content: Html, options: LayoutOptions = {}): Html {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title}</title>
+  ${ICON_LINKS}
   ${options.extraHead ?? ""}
   <link rel="stylesheet" href="/static/app.css">
   <!-- Vendored, not CDN: entry must keep working if the venue's wifi doesn't. -->

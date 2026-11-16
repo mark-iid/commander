@@ -95,6 +95,11 @@ test("the page and the board carry the same event key", () => {
   expect(page.match(new RegExp(key, "g"))?.length).toBe(2);
 });
 
+test("the board links the favicon, since it has its own head", () => {
+  expect(page).toContain('<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">');
+  expect(page).toContain('<link rel="icon" href="/favicon.ico" sizes="32x32">');
+});
+
 test("the board counts the games that have anything recorded", () => {
   expect(page).toContain("6 games");
 });

@@ -47,6 +47,10 @@ app.route("/", home);
 
 // Static assets. See worker/assets.ts for why the prefix comes off.
 app.all("/static/*", (c) => c.env.ASSETS.fetch(assetRequest(c.req.raw)));
+// Asked for at the root by browsers and iOS whatever the page links. The
+// binding's root is static/, so these paths need no rewriting.
+app.get("/favicon.ico", (c) => c.env.ASSETS.fetch(c.req.raw));
+app.get("/apple-touch-icon.png", (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default app;
 

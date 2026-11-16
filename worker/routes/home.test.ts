@@ -111,6 +111,14 @@ describe("before anything is recorded", () => {
   });
 });
 
+test("pages in the shared layout link the favicon", async () => {
+  for (const path of ["/", "/login"]) {
+    const page = await (await app.request(path, {}, env)).text();
+    expect(page, path).toContain('<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">');
+    expect(page, path).toContain('<link rel="apple-touch-icon" href="/apple-touch-icon.png">');
+  }
+});
+
 test("an empty database still renders, and says so", async () => {
   await resetDatabase(env.DB);
   const page = await home();
